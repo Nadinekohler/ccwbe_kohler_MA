@@ -11,7 +11,7 @@ gtiff_driver=gdal.GetDriverByName("GTiff")
 
 
 #input data
-myworkspace="C:/DATA/projects/CCWBE/GIS"
+myworkspace="E:\Masterarbeit\GIS"
 referenceraster=myworkspace+"/bedem10m.tif"
 
 #*************************************************************
