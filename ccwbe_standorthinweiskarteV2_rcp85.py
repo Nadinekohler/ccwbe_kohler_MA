@@ -1221,7 +1221,7 @@ del scoresonderwaldarr
 #outarrgeroell=joblib.load(outdir+"/outarrgeroell.sav")
 #outscorearrgeroell=joblib.load(outdir+"/outscorearrgeroell.sav")
 
-print("3 Geroell/Schutt im Kristallin")
+print("19 Geroell/Schutt im Kristallin")
 outarrgeroellkristallin=np.zeros((nrows, ncols), dtype=int)
 outarrgeroellkristallin[:]=NODATA_value
 outscorearrgeroellkristallin=np.zeros((nrows, ncols), dtype=float)
@@ -2103,6 +2103,20 @@ convertarrtotif(outarr, outdir+"/"+"bestandortstypen_rcp85.tif", 3, referenceras
 convertarrtotif(outscorearrint, outdir+"/"+"bestandortstypenscoreinteger_rcp85.tif", indatatypeint, referenceraster, NODATA_value)
 #plt.imshow(outarr)
 print("modelling done ...")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Arrondierung
 print("Arrondierung ....")
