@@ -32,9 +32,11 @@ import shapely.geometry as sg
 
 # *************************************************************
 #environment settings
-myworkspace="E:/Masterarbeit/GIS"
+myworkspace="C:/DATA/projects/CCWBE_Kohler/GIS"
+#myworkspace="E:/Masterarbeit/GIS"
 referenceraster=myworkspace+"/bedem10m.tif"
-codespace="E:/Masterarbeit/Parametertabelle"
+#codespace="E:/Masterarbeit/Parametertabelle"
+codespace="C:/DATA/develops/ccwbe_kohler_MA"
 #outdir=myworkspace+"/out20220112_mitSturztrajektorien"
 outdir=myworkspace+"/Modellergebnisse"
 #model parameter file
