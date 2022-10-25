@@ -32,11 +32,11 @@ import shapely.geometry as sg
 
 # *************************************************************
 #environment settings
-myworkspace="C:/DATA/projects/CCWBE_Kohler/GIS"
-#myworkspace="E:/Masterarbeit/GIS"
+#myworkspace="C:/DATA/projects/CCWBE_Kohler/GIS"
+myworkspace="E:/Masterarbeit/GIS"
 referenceraster=myworkspace+"/bedem10m.tif"
-#codespace="E:/Masterarbeit/Parametertabelle"
-codespace="C:/DATA/develops/ccwbe_kohler_MA"
+codespace="E:/Masterarbeit/Parametertabelle"
+#codespace="C:/DATA/develops/ccwbe_kohler_MA"
 #outdir=myworkspace+"/out20220112_mitSturztrajektorien"
 outdir=myworkspace+"/Modellergebnisse"
 #model parameter file
@@ -2107,19 +2107,6 @@ convertarrtotif(outscorearrint, outdir+"/"+"bestandortstypenscoreinteger_rcp85.t
 print("modelling done ...")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 #Arrondierung
 print("Arrondierung ....")
 #outarr=convert_tif_to_array(outdir+"/"+"bestandortstypen.tif")
@@ -2204,159 +2191,7 @@ while i<nrows-1:
 convertarrtotif(outarrarrondiert, outdir+"/"+"bestandortstypenarrondiert_rcp85.tif", 3, referenceraster, NODATA_value)
 convertarrtotif(arrondiertarr, outdir+"/"+"bearrondiert_rcp85.tif", indatatypeint, referenceraster, NODATA_value)
 
-np.sum(outarrarrondiert)==np.sum(outarr)
 
-#convert to shapefile
-#outarr.dtype
-#print("convert raster to shapefile and join parameterfile to shapefile ....")
-# create new shapefile with the create_shp function
-#shp_driver = ogr.GetDriverByName("ESRI Shapefile")
-#shp_dataset = shp_driver.CreateDataSource(outdir+"/bestandortstypen.shp")
-#spat_ref = osr.SpatialReference()
-#proj = referencetifraster.GetProjectionRef()
-#spat_ref.ImportFromWkt(proj)
-#dst_layer =shp_dataset.CreateLayer("besto",spat_ref, ogr.wkbPolygon)
-## create new field to define values
-#new_field = ogr.FieldDefn("joinid", ogr.OFTInteger)
-#dst_layer.CreateField(new_field)
-## Polygonize(band, hMaskBand[optional]=None, destination lyr, field ID, papszOptions=[], callback=None)
-#raster=gdal.Open(outdir+"/"+"bestandortstypen.tif")
-#raster_band=raster.GetRasterBand(1)
-#gdal.Polygonize(raster_band, None, dst_layer, 0, [], callback=None)
-#time.sleep(1200)
-#shp_dataset.Destroy()
-#Alternative?:
-#os.system('python3 -m gdal_polygonize '+outdir+'/bestandortstypen.tif -b 1 -f "ESRI Shapefile" bestandortstypen joinid')
-# create projection file
-#with open(outdir+"/bestandortstypen.prj", "w") as prj:
-#    prj.write(int(spat_ref.GetAuthorityCode(None)))
-#prj.close()
-#eventuell Warteschlaufe einbauen weil gdal kein Signal zurueckgibt wann Befehl fertig ausgefuehrt ist
-
-#open shapefile and join values from parameter file
-#inraster = xr.open_rasterio(outdir+"/"+"bestandortstypen.tif").squeeze('band', drop=True)
-#bestandortstypengdf=polygonize(inraster)
-#bestandortstypengdf=gpd.read_file(outdir+"/"+"bestandortstypen_intsct_region.shp")
-
-#join parameter table
-bestandortstypengdf=gpd.read_file(outdir+"/"+"bestandortstypen_rcp85.shp")
-bestandortstypengdf["region"]=""
-bestandortstypengdf.loc[bestandortstypengdf["regionid"]==1,"region"]="Berner Jura"
-bestandortstypengdf.loc[bestandortstypengdf["regionid"]==2,"region"]="Mittelland"
-bestandortstypengdf.loc[bestandortstypengdf["regionid"]==3,"region"]="Oberland"
-
-bestandortstypengdf.dtypes
-#bestandortstypengdf=bestandortstypengdf.astype({'value': 'int64'})
-bestandortstypengdf.columns
-len(bestandortstypengdf)
-#bestandortstypengdf=bestandortstypengdf.rename(columns={"value":"joinid"})
-#bestandortstypengdf=bestandortstypengdf.rename(columns={"gridcode":"joinid"})
-bestandortstypengdf=bestandortstypengdf[bestandortstypengdf["joinid"]>0][["joinid","geometry","regionid","region"]]
-bestandortstypengdf["area"]=bestandortstypengdf["geometry"].area
-#bestandortstypengdf=bestandortstypengdf.astype({'joinid': 'int64'})
-parameterdf.columns
-parameterdf.dtypes
-parameterdf=parameterdf.astype({'joinid': 'int64'})
-parameterdf.dtypes
-parameterdfjoin=parameterdf[["joinid","NrBE","BE","NaiS_LFI_JU","NaiS_LFI_M/A","Anforderungsprofil_NaiS_koll"]] #Nadine: "Anforderungsprofil NaiS" wurde um "-colline Variante" angepasst.
-bestandortstypengdfmerge = bestandortstypengdf.merge(parameterdfjoin, on='joinid',how="left")
-len(bestandortstypengdfmerge)
-bestandortstypengdfmerge.columns
-bestandortstypengdfmerge=bestandortstypengdfmerge[(bestandortstypengdfmerge["joinid"]>0)]
-bestandortstypengdfmerge["nais"]=""
-bestandortstypengdfmerge.loc[(bestandortstypengdfmerge["regionid"]==1),"nais"]=bestandortstypengdfmerge["NaiS_LFI_JU"]
-bestandortstypengdfmerge.loc[(bestandortstypengdfmerge["regionid"]==2),"nais"]=bestandortstypengdfmerge["NaiS_LFI_M/A"]
-bestandortstypengdfmerge.loc[(bestandortstypengdfmerge["regionid"]==3),"nais"]=bestandortstypengdfmerge["NaiS_LFI_M/A"]
-len(bestandortstypengdfmerge)
-
-bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_rcp85.shp")
-print("exported joined  shapefile")
-
-#clip shapefile with forest mask
-#waldgdf=gpd.read_file(myworkspace+"/bewald.shp")
-#waldgdf.crs
-#len(waldgdf)
-#bestandortstypengdfmergeclip=gpd.clip(bestandortstypengdfmerge, waldgdf,keep_geom_type=False)
-#bestandortstypengdfmergeclip.to_file(outdir+"/bestandortstypenjoinedclipwald.shp")
-#print("shapefile clipped to forest cover")
-
-#aggregate areas
-bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp85.shp")
-bestandortstypengdfmergeJURA=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==1]
-bestandortstypengdfmergeMittelland=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==2]
-bestandortstypengdfmergeAlpen=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==3]
-
-#areastatistics=bestandortstypengdfmerge.groupby(["region","BE"]).agg({'area': 'sum'})
-#areastatistics["hektar"]=areastatistics["area"]/10000.0
-areastatisticsJura=bestandortstypengdfmergeJURA.groupby(["BE"]).agg({'area': 'sum'})
-areastatisticsMittelland=bestandortstypengdfmergeMittelland.groupby(["BE"]).agg({'area': 'sum'})
-areastatisticsAlpen=bestandortstypengdfmergeAlpen.groupby(["BE"]).agg({'area': 'sum'})
-areastatisticsJura["hektar"]=areastatisticsJura["area"]/10000.0
-areastatisticsMittelland["hektar"]=areastatisticsMittelland["area"]/10000.0
-areastatisticsAlpen["hektar"]=areastatisticsAlpen["area"]/10000.0
-#areastatisticsJura=areastatisticsJura.rename_axis(index='BE', columns="index")
-areastatisticsJura["BEeinheit"] = areastatisticsJura.index
-areastatisticsMittelland["BEeinheit"] = areastatisticsMittelland.index
-areastatisticsAlpen["BEeinheit"] = areastatisticsAlpen.index
-#join Haeufigkeit
-haeufigkeitdf=pd.read_excel(codespace+"/"+"Haeufigkeit_Schaetzung_def_20220314.xlsx", dtype="str", engine='openpyxl')
-haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Jura":int})
-haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Mittelland":int})
-haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Alpen":int})
-haeufigkeitdf.dtypes
-joinJura=haeufigkeitdf[["BE","Priorisierung Jura"]].groupby(["BE"]).agg({'Priorisierung Jura': 'max'})
-joinJura["BEeinheit"]=joinJura.index
-joinML=haeufigkeitdf[["BE","Priorisierung Mittelland"]].groupby(["BE"]).agg({'Priorisierung Mittelland': 'max'})
-joinML["BEeinheit"]=joinML.index
-joinA=haeufigkeitdf[["BE","Priorisierung Alpen"]].groupby(["BE"]).agg({'Priorisierung Alpen': 'max'})
-joinA["BEeinheit"]=joinA.index
-areastatisticsJura=areastatisticsJura.merge(joinJura[["BEeinheit","Priorisierung Jura"]], on='BEeinheit',how="left")
-areastatisticsMittelland=areastatisticsMittelland.merge(joinML[["BEeinheit","Priorisierung Mittelland"]], on='BEeinheit',how="left")
-areastatisticsAlpen=areastatisticsAlpen.merge(joinA[["BEeinheit","Priorisierung Alpen"]], on='BE',how="left")
-
-areastatisticsJura.to_excel(outdir+"/areastatisticsJura_rcp85.xlsx")
-areastatisticsMittelland.to_excel(outdir+"/areastatisticsMittelland_rcp85.xlsx")
-areastatisticsAlpen.to_excel(outdir+"/areastatisticsAlpen_rcp85.xlsx")
-#areastatistics.to_excel(outdir+"/areastatistics.xlsx")
-
-#arrondiertes file
-bestandortstypenarrondiertgdf=gpd.read_file(outdir+"/"+"bestandortstypenarrondiert_rcp85.shp")
-bestandortstypenarrondiertgdf["region"]=""
-bestandortstypenarrondiertgdf.loc[bestandortstypenarrondiertgdf["regionid"]==1,"region"]="Berner Jura"
-bestandortstypenarrondiertgdf.loc[bestandortstypenarrondiertgdf["regionid"]==2,"region"]="Mittelland"
-bestandortstypenarrondiertgdf.loc[bestandortstypenarrondiertgdf["regionid"]==3,"region"]="Oberland"
-
-bestandortstypenarrondiertgdf.dtypes
-#bestandortstypengdf=bestandortstypengdf.astype({'value': 'int64'})
-bestandortstypenarrondiertgdf.columns
-len(bestandortstypenarrondiertgdf)
-#bestandortstypengdf=bestandortstypengdf.rename(columns={"value":"joinid"})
-#bestandortstypengdf=bestandortstypengdf.rename(columns={"gridcode":"joinid"})
-bestandortstypenarrondiertgdf=bestandortstypenarrondiertgdf[bestandortstypenarrondiertgdf["joinid"]>0][["joinid","geometry","regionid","region"]]
-bestandortstypenarrondiertgdf["area"]=bestandortstypenarrondiertgdf["geometry"].area
-#bestandortstypengdf=bestandortstypengdf.astype({'joinid': 'int64'})
-#parameterdf.columns
-#parameterdf.dtypes
-#parameterdf=parameterdf.astype({'joinid': 'int64'})
-#parameterdf.dtypes
-#parameterdfjoin=parameterdf[["joinid","NrBE","BE","NaiS_LFI_JU","NaiS_LFI_M/A","Anforderungsprofil NaiS"]]
-bestandortstypenarrondiertgdfmerge = bestandortstypenarrondiertgdf.merge(parameterdfjoin, on='joinid',how="left")
-len(bestandortstypenarrondiertgdfmerge)
-bestandortstypenarrondiertgdfmerge.columns
-bestandortstypenarrondiertgdfmerge=bestandortstypenarrondiertgdfmerge[(bestandortstypenarrondiertgdfmerge["joinid"]>0)]
-bestandortstypenarrondiertgdfmerge["nais"]=""
-bestandortstypenarrondiertgdfmerge.loc[(bestandortstypenarrondiertgdfmerge["regionid"]==1),"nais"]=bestandortstypenarrondiertgdfmerge["NaiS_LFI_JU"]
-bestandortstypenarrondiertgdfmerge.loc[(bestandortstypenarrondiertgdfmerge["regionid"]==2),"nais"]=bestandortstypenarrondiertgdfmerge["NaiS_LFI_M/A"]
-bestandortstypenarrondiertgdfmerge.loc[(bestandortstypenarrondiertgdfmerge["regionid"]==3),"nais"]=bestandortstypenarrondiertgdfmerge["NaiS_LFI_M/A"]
-len(bestandortstypenarrondiertgdfmerge)
-#clip shapefile with forest mask
-#waldgdf=gpd.read_file(myworkspace+"/bewaldbuffer20m.shp")
-#waldgdf.crs
-#len(waldgdf)
-#bestandortstypengdfmergeclip=gpd.clip(bestandortstypengdfmerge, waldgdf,keep_geom_type=False)
-##bestandortstypengdfmergeclip.to_file(outdir+"/bestandortstypenjoinedclipwald_mitsturztrajektorien.shp")
-#bestandortstypengdfmergeclip.to_file(outdir+"/bestandortstypenjoinedclipwald_ohnesturztrajektorien.shp")
-#print("shapefile clipped to forest cover")
-#bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_mitsturztrajektorien.shp")
-bestandortstypenarrondiertgdfmerge.to_file(outdir+"/bestandortstypenarrondiertjoined_rcp85.shp")
-print("exported joined  shapefile")
+#nächster Schritt: TIF in ein Shape umwandeln --> Toolbox: bestandortstypen_rcp85.shp und bestandortstypenarrondiert_rcp85.shp
+#Den Shapes werden die Region angehängt.
+#Mit den Shapes ccwbe_standorthinweiskarteV2_rcp85_join ausführen.
