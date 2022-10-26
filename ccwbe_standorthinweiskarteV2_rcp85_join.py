@@ -11,13 +11,13 @@ gtiff_driver=gdal.GetDriverByName("GTiff")
 import fiona
 import geopandas as gpd
 import os
-#import shapefile
+import shapefile
 import shapely
 #import pyshp
 from osgeo import ogr
-#import psycopg2
+import psycopg2
 import sqlalchemy
-#import geoalchemy2
+import geoalchemy2
 from sqlalchemy import create_engine
 import xlrd
 import openpyxl
@@ -36,7 +36,7 @@ myworkspace="E:/Masterarbeit/GIS"
 referenceraster=myworkspace+"/bedem10m.tif"
 codespace="E:/Masterarbeit/Parametertabelle"
 #outdir=myworkspace+"/out20220112_mitSturztrajektorien"
-outdir=myworkspace+"/Modellergebnisse"
+outdir=myworkspace
 #model parameter file
 parameterdf=pd.read_excel(codespace+"/"+"Anhang1_Parameter_Waldstandorte_BE_erweitert_220929.xlsx", dtype="str", engine='openpyxl')
 parameterdf.columns
@@ -120,7 +120,14 @@ dhmarr=convert_tif_to_array(myworkspace+"/bedem10m.tif")
 if np.min(dhmarr)<NODATA_value:
     dhmarr=np.where((dhmarr<NODATA_value),NODATA_value,dhmarr)
 #NODATA_value=np.min(dhmarr)
+
+#read the shapefiles (NADINE) --> Aufbereitung in der Toolbox
+print("read shapefiles")
+bestandortstypengdf=(myworkspace+"/bestandortstypen_rcp85.shp")
+bestandortstypenarrondiertgdf=(myworkspace+"/bestandortstypenarrondiert_rcp85.shp")
+
 #*****************************************************************************************************************
+
 #create a mask array
 print("create a mask")
 maskarr=convert_tif_to_array(myworkspace+"/bemask.tif")
@@ -154,7 +161,7 @@ parameterdf.columns
 parameterdf.dtypes
 parameterdf=parameterdf.astype({'joinid': 'int64'})
 parameterdf.dtypes
-parameterdfjoin=parameterdf[["joinid","NrBE","BE","NaiS_LFI_JU","NaiS_LFI_M/A","Anforderungsprofil_NaiS_koll"]] #Nadine: "Anforderungsprofil NaiS" wurde um "-colline Variante" angepasst.
+parameterdfjoin=parameterdf[["joinid","NrBE","BE","NaiS_LFI_JU","NaiS_LFI_M/A","BE_zukunft","Anforderungsprofil_NaiS_koll"]] #Nadine: "Anforderungsprofil NaiS" wurde um "-colline Variante" angepasst.
 bestandortstypengdfmerge = bestandortstypengdf.merge(parameterdfjoin, on='joinid',how="left")
 len(bestandortstypengdfmerge)
 bestandortstypengdfmerge.columns
@@ -168,6 +175,7 @@ len(bestandortstypengdfmerge)
 bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_rcp85.shp")
 print("exported joined  shapefile")
 
+#Weiterer Schritt in der Toolbox
 
 #aggregate areas
 bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp85.shp")
@@ -175,9 +183,9 @@ bestandortstypengdfmergeJURA=bestandortstypengdfmergeclip[bestandortstypengdfmer
 bestandortstypengdfmergeMittelland=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==2]
 bestandortstypengdfmergeAlpen=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==3]
 
-areastatisticsJura=bestandortstypengdfmergeJURA.groupby(["BE"]).agg({'area': 'sum'})
-areastatisticsMittelland=bestandortstypengdfmergeMittelland.groupby(["BE"]).agg({'area': 'sum'})
-areastatisticsAlpen=bestandortstypengdfmergeAlpen.groupby(["BE"]).agg({'area': 'sum'})
+areastatisticsJura=bestandortstypengdfmergeJURA.groupby(["BE_zukunft"]).agg({'area': 'sum'})
+areastatisticsMittelland=bestandortstypengdfmergeMittelland.groupby(["BE_zukunft"]).agg({'area': 'sum'})
+areastatisticsAlpen=bestandortstypengdfmergeAlpen.groupby(["BE_zukunft"]).agg({'area': 'sum'})
 areastatisticsJura["hektar"]=areastatisticsJura["area"]/10000.0
 areastatisticsMittelland["hektar"]=areastatisticsMittelland["area"]/10000.0
 areastatisticsAlpen["hektar"]=areastatisticsAlpen["area"]/10000.0
@@ -191,11 +199,11 @@ haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Jura":int})
 haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Mittelland":int})
 haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Alpen":int})
 haeufigkeitdf.dtypes
-joinJura=haeufigkeitdf[["BE","Priorisierung Jura"]].groupby(["BE"]).agg({'Priorisierung Jura': 'max'})
+joinJura=haeufigkeitdf[["BE_zukunft","Priorisierung Jura"]].groupby(["BE_zukunft"]).agg({'Priorisierung Jura': 'max'})
 joinJura["BEeinheit"]=joinJura.index
-joinML=haeufigkeitdf[["BE","Priorisierung Mittelland"]].groupby(["BE"]).agg({'Priorisierung Mittelland': 'max'})
+joinML=haeufigkeitdf[["BE_zukunft","Priorisierung Mittelland"]].groupby(["BE_zukunft"]).agg({'Priorisierung Mittelland': 'max'})
 joinML["BEeinheit"]=joinML.index
-joinA=haeufigkeitdf[["BE","Priorisierung Alpen"]].groupby(["BE"]).agg({'Priorisierung Alpen': 'max'})
+joinA=haeufigkeitdf[["BE_zukunft","Priorisierung Alpen"]].groupby(["BE_zukunft"]).agg({'Priorisierung Alpen': 'max'})
 joinA["BEeinheit"]=joinA.index
 areastatisticsJura=areastatisticsJura.merge(joinJura[["BEeinheit","Priorisierung Jura"]], on='BEeinheit',how="left")
 areastatisticsMittelland=areastatisticsMittelland.merge(joinML[["BEeinheit","Priorisierung Mittelland"]], on='BEeinheit',how="left")
