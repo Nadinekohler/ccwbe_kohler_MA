@@ -121,7 +121,13 @@ if np.min(dhmarr)<NODATA_value:
     dhmarr=np.where((dhmarr<NODATA_value),NODATA_value,dhmarr)
 #NODATA_value=np.min(dhmarr)
 
-#read the shapefiles (NADINE) --> Aufbereitung in der Toolbox
+
+#*****************
+# Aufbereitung in der Toolbox postprocessing2_rcpxx
+#*****************
+
+
+#read the shapefiles (NADINE)
 print("read shapefiles")
 bestandortstypengdf=(myworkspace+"/bestandortstypen_rcp85.shp")
 bestandortstypenarrondiertgdf=(myworkspace+"/bestandortstypenarrondiert_rcp85.shp")
@@ -175,13 +181,19 @@ len(bestandortstypengdfmerge)
 bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_rcp85.shp")
 print("exported joined  shapefile")
 
-#Weiterer Schritt in der Toolbox
+#**********************************
+#Weiterer Schritt in der Toolbox: auf Waldfläche clippen --> diesen Schritt braucht es aber gar nicht, da die Maske schon die Waldmaske ist!
 
 #aggregate areas
-bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp85.shp")
-bestandortstypengdfmergeJURA=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==1]
-bestandortstypengdfmergeMittelland=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==2]
-bestandortstypengdfmergeAlpen=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==3]
+#bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp85.shp")
+#bestandortstypengdfmergeJURA=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==1]
+#bestandortstypengdfmergeMittelland=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==2]
+#bestandortstypengdfmergeAlpen=bestandortstypengdfmergeclip[bestandortstypengdfmergeclip["regionid"]==3]
+
+#bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp85.shp")
+bestandortstypengdfmergeJURA=bestandortstypengdfmerge[bestandortstypengdfmerge["regionid"]==1]
+bestandortstypengdfmergeMittelland=bestandortstypengdfmerge[bestandortstypengdfmerge["regionid"]==2]
+bestandortstypengdfmergeAlpen=bestandortstypengdfmerge[bestandortstypengdfmerge["regionid"]==3]
 
 areastatisticsJura=bestandortstypengdfmergeJURA.groupby(["BE_zukunft"]).agg({'area': 'sum'})
 areastatisticsMittelland=bestandortstypengdfmergeMittelland.groupby(["BE_zukunft"]).agg({'area': 'sum'})
@@ -194,20 +206,20 @@ areastatisticsJura["BEeinheit"] = areastatisticsJura.index
 areastatisticsMittelland["BEeinheit"] = areastatisticsMittelland.index
 areastatisticsAlpen["BEeinheit"] = areastatisticsAlpen.index
 #join Haeufigkeit
-haeufigkeitdf=pd.read_excel(codespace+"/"+"Haeufigkeit_Schaetzung_def_20220314.xlsx", dtype="str", engine='openpyxl')
+haeufigkeitdf=pd.read_excel(codespace+"/"+"Haeufigkeit_Schaetzung_def_20220314.xlsx", dtype="str", engine='openpyxl') #Was passiert mit den Kollinen Einheiten?
 haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Jura":int})
 haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Mittelland":int})
 haeufigkeitdf=haeufigkeitdf.astype({"Priorisierung Alpen":int})
 haeufigkeitdf.dtypes
-joinJura=haeufigkeitdf[["BE_zukunft","Priorisierung Jura"]].groupby(["BE_zukunft"]).agg({'Priorisierung Jura': 'max'})
+joinJura=haeufigkeitdf[["BE","Priorisierung Jura"]].groupby(["BE"]).agg({'Priorisierung Jura': 'max'})
 joinJura["BEeinheit"]=joinJura.index
-joinML=haeufigkeitdf[["BE_zukunft","Priorisierung Mittelland"]].groupby(["BE_zukunft"]).agg({'Priorisierung Mittelland': 'max'})
+joinML=haeufigkeitdf[["BE","Priorisierung Mittelland"]].groupby(["BE"]).agg({'Priorisierung Mittelland': 'max'})
 joinML["BEeinheit"]=joinML.index
-joinA=haeufigkeitdf[["BE_zukunft","Priorisierung Alpen"]].groupby(["BE_zukunft"]).agg({'Priorisierung Alpen': 'max'})
+joinA=haeufigkeitdf[["BE","Priorisierung Alpen"]].groupby(["BE"]).agg({'Priorisierung Alpen': 'max'})
 joinA["BEeinheit"]=joinA.index
 areastatisticsJura=areastatisticsJura.merge(joinJura[["BEeinheit","Priorisierung Jura"]], on='BEeinheit',how="left")
 areastatisticsMittelland=areastatisticsMittelland.merge(joinML[["BEeinheit","Priorisierung Mittelland"]], on='BEeinheit',how="left")
-areastatisticsAlpen=areastatisticsAlpen.merge(joinA[["BEeinheit","Priorisierung Alpen"]], on='BE',how="left")
+areastatisticsAlpen=areastatisticsAlpen.merge(joinA[["BEeinheit","Priorisierung Alpen"]], on='BEeinheit',how="left")
 
 areastatisticsJura.to_excel(outdir+"/areastatisticsJura_rcp85.xlsx")
 areastatisticsMittelland.to_excel(outdir+"/areastatisticsMittelland_rcp85.xlsx")
