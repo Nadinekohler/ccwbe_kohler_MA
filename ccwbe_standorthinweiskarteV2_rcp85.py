@@ -1176,7 +1176,7 @@ del scoresonderwaldarr
 #outscorearrbs=joblib.load(outdir+"/outscorearrbs.sav")
 
 
-print("3 Geroell/Schutt")
+print("3 Geroell/Schutt ausserhalb Kristallin")
 outarrgeroell=np.zeros((nrows, ncols), dtype=int)
 outarrgeroell[:]=NODATA_value
 outscorearrgeroell=np.zeros((nrows, ncols), dtype=float)
@@ -1365,6 +1365,7 @@ outarrmoor=np.zeros((nrows, ncols), dtype=int)
 outarrmoor[:]=NODATA_value
 outscorearrmoor=np.zeros((nrows, ncols), dtype=float)
 parameterdfsonderwald=parameterdf[(parameterdf["Sonderwald"].astype(str).str.contains("8"))]
+parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["Sonderwald"].astype(str).str.contains("18")))]
 parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["Ju Bfö"].isin(["x","y","m","a","z"])))]
 parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["Ju Wfö"].isin(["x","y","m","a","z"])))]
 parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["M/A Arve"].isin(["x","y","m","a","z"])))]
@@ -1700,7 +1701,7 @@ print("1 Bachschutt")
 outarrbachschutt=np.zeros((nrows, ncols), dtype=int)
 outarrbachschutt[:]=NODATA_value
 outscorearrbachschutt=np.zeros((nrows, ncols), dtype=float)
-parameterdfsonderwald=parameterdf[((parameterdf["Sonderwald"].astype(str).str.contains("1"))&~(parameterdf["Sonderwald"].astype(str).str.contains("10"))&~(parameterdf["Sonderwald"].astype(str).str.contains("11"))&~(parameterdf["Sonderwald"].astype(str).str.contains("12"))&~(parameterdf["Sonderwald"].astype(str).str.contains("13"))&~(parameterdf["Sonderwald"].astype(str).str.contains("14"))&~(parameterdf["Sonderwald"].astype(str).str.contains("19")))]
+parameterdfsonderwald=parameterdf[((parameterdf["Sonderwald"].astype(str).str.contains("1"))&~(parameterdf["Sonderwald"].astype(str).str.contains("10"))&~(parameterdf["Sonderwald"].astype(str).str.contains("11"))&~(parameterdf["Sonderwald"].astype(str).str.contains("12"))&~(parameterdf["Sonderwald"].astype(str).str.contains("13"))&~(parameterdf["Sonderwald"].astype(str).str.contains("14"))&~(parameterdf["Sonderwald"].astype(str).str.contains("15"))&~(parameterdf["Sonderwald"].astype(str).str.contains("16"))&~(parameterdf["Sonderwald"].astype(str).str.contains("17"))&~(parameterdf["Sonderwald"].astype(str).str.contains("18"))&~(parameterdf["Sonderwald"].astype(str).str.contains("19")))]
 parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["Ju Bfö"].isin(["x","y","m","a","z"])))]
 parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["Ju Wfö"].isin(["x","y","m","a","z"])))]
 parameterdfsonderwald=parameterdfsonderwald[((~parameterdfsonderwald["M/A Arve"].isin(["x","y","m","a","z"])))]
@@ -1938,7 +1939,8 @@ print("18 Kristallin")
 outarrkristallin=np.zeros((nrows, ncols), dtype=int)
 outarrkristallin[:]=NODATA_value
 outscorearrkristallin=np.zeros((nrows, ncols), dtype=float)
-parameterdfkristallin=parameterdf[(parameterdf["kristallin"].isin(["x"]))]
+parameterdfkristallin=parameterdf[((parameterdf["kristallin"].isin(["x"])&(parameterdf["Sonderwald"].astype(str).str.contains("0"))))]
+parameterdfkristallin=parameterdfkristallin[((~parameterdfkristallin["Sonderwald"].astype(str).str.contains("10")))]
 parameterdfkristallin=parameterdfkristallin[((~parameterdfkristallin["Ju Bfö"].isin(["x","y","m","a","z"])))]
 parameterdfkristallin=parameterdfkristallin[((~parameterdfkristallin["Ju Wfö"].isin(["x","y","m","a","z"])))]
 parameterdfkristallin=parameterdfkristallin[((~parameterdfkristallin["M/A Arve"].isin(["x","y","m","a","z"])))]
