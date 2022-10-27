@@ -747,7 +747,7 @@ maskarrbool=np.where(maskarr==1, False, maskarrbool)
 #*****************************************************************************************************************
 print("read rasters")
 #sonderwaldarr=convert_tif_to_array(myworkspace+"/besonderwald.tif")
-sonderwaldarr=convert_tif_to_array(myworkspace+"/besonderwald_rcp85.tif")
+sonderwaldarr=convert_tif_to_array(myworkspace+"/besonderwald_rcp45.tif")
 #felsarr=convert_tif_to_array(myworkspace+"/befels.tif")
 lagearr=convert_tif_to_array(myworkspace+"/belage.tif")
 #pharr=convert_tif_to_array(myworkspace+"/bebodenreaktionverfeinert.tif")
@@ -759,7 +759,7 @@ gruendigkeitarr=convert_tif_to_array(myworkspace+"/bebodengruendigkeitklassifizi
 feuchtearr=convert_tif_to_array(myworkspace+"/bebodenfeuchte5klassen.tif")
 gebueschwaldarr=convert_tif_to_array(myworkspace+"/beshrubforest.tif")
 regionenarr=convert_tif_to_array(myworkspace+"/beregionenplus.tif")
-hoehenstufenarr=convert_tif_to_array(myworkspace+"/bevegetationshoehenstufen_rcp85.tif")
+hoehenstufenarr=convert_tif_to_array(myworkspace+"/bevegetationshoehenstufen_rcp45.tif")
 tgarr=convert_tif_to_array(myworkspace+"/betg.tif")
 phcombiarr=convert_tif_to_array(myworkspace+"/bephcombiarr2.tif")
 wasserarr=convert_tif_to_array(myworkspace+"/bewasser.tif")
@@ -2102,9 +2102,9 @@ outscorearrint=np.where((waldarr==1),outscorearrint,0)
 #joblib.dump(outarr,outdir+"/outarr_final.sav")
 #joblib.dump(outscorearr,outdir+"/outscorearr_final.sav")
 #joblib.dump(outscorearrint,outdir+"/outscorearrint_final.sav")
-convertarrtotif(outarr, outdir+"/"+"bestandortstypen_rcp85.tif", 3, referenceraster, NODATA_value)
+convertarrtotif(outarr, outdir+"/"+"bestandortstypen_rcp45.tif", 3, referenceraster, NODATA_value)
 #convertarrtotif(outscorearr, outdir+"/"+"bestandortstypenscore.tif", indatatype, referenceraster, NODATA_value)
-convertarrtotif(outscorearrint, outdir+"/"+"bestandortstypenscoreinteger_rcp85.tif", indatatypeint, referenceraster, NODATA_value)
+convertarrtotif(outscorearrint, outdir+"/"+"bestandortstypenscoreinteger_rcp45.tif", indatatypeint, referenceraster, NODATA_value)
 #plt.imshow(outarr)
 print("modelling done ...")
 
@@ -2190,10 +2190,10 @@ while i<nrows-1:
                     arrondiertarr[i,j]=1
         j+=1
     i+=1
-convertarrtotif(outarrarrondiert, outdir+"/"+"bestandortstypenarrondiert_rcp85.tif", 3, referenceraster, NODATA_value)
-convertarrtotif(arrondiertarr, outdir+"/"+"bearrondiert_rcp85.tif", indatatypeint, referenceraster, NODATA_value)
+convertarrtotif(outarrarrondiert, outdir+"/"+"bestandortstypenarrondiert_rcp45.tif", 3, referenceraster, NODATA_value)
+convertarrtotif(arrondiertarr, outdir+"/"+"bearrondiert_rcp45.tif", indatatypeint, referenceraster, NODATA_value)
 
 
-#nächster Schritt: TIF in ein Shape umwandeln --> Toolbox: bestandortstypen_rcp85.shp und bestandortstypenarrondiert_rcp85.shp
+#nächster Schritt: TIF in ein Shape umwandeln --> Toolbox: bestandortstypen_rcp45.shp und bestandortstypenarrondiert_rcp45.shp
 #Den Shapes werden die Regionen angehängt.
-#Mit den Shapes ccwbe_standorthinweiskarteV2_rcp85_join ausführen. Der Code hängt die Waldstandortstypen und Parameter an.
+#Mit den Shapes ccwbe_standorthinweiskarteV2_rcp45_join ausführen. Der Code hängt die Waldstandortstypen und Parameter an.

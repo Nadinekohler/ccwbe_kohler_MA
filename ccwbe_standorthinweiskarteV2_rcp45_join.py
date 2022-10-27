@@ -129,8 +129,8 @@ if np.min(dhmarr)<NODATA_value:
 
 #read the shapefiles (NADINE)
 print("read shapefiles")
-bestandortstypengdf=(myworkspace+"/bestandortstypen_rcp85.shp")
-bestandortstypenarrondiertgdf=(myworkspace+"/bestandortstypenarrondiert_rcp85.shp")
+bestandortstypengdf=(myworkspace+"/bestandortstypen_rcp45.shp")
+bestandortstypenarrondiertgdf=(myworkspace+"/bestandortstypenarrondiert_rcp45.shp")
 
 #*****************************************************************************************************************
 
@@ -150,7 +150,7 @@ outscorearr=np.zeros((nrows, ncols), dtype=float)
 
 
 #join parameter table to bestandortstypen Shapefile
-bestandortstypengdf=gpd.read_file(outdir+"/"+"bestandortstypen_rcp85.shp")
+bestandortstypengdf=gpd.read_file(outdir+"/"+"bestandortstypen_rcp45.shp")
 bestandortstypengdf["region"]=""
 bestandortstypengdf.loc[bestandortstypengdf["regionid"]==1,"region"]="Berner Jura"
 bestandortstypengdf.loc[bestandortstypengdf["regionid"]==2,"region"]="Mittelland"
@@ -178,14 +178,13 @@ bestandortstypengdfmerge.loc[(bestandortstypengdfmerge["regionid"]==2),"nais"]=b
 bestandortstypengdfmerge.loc[(bestandortstypengdfmerge["regionid"]==3),"nais"]=bestandortstypengdfmerge["NaiS_LFI_M/A"]
 len(bestandortstypengdfmerge)
 
-bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_rcp85.shp")
+bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_rcp45.shp")
 print("exported joined  shapefile")
-
 
 #Nadine: Weiterer Schritt in der Toolbox braucht es nicht, da die Maske schon die Waldmaske ist!
 #Direkt weiter:
 
-#bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp85.shp")
+#bestandortstypengdfmergeclip=gpd.read_file(outdir+"/"+"bestandortstypenjoinedclipwald_rcp45.shp")
 bestandortstypengdfmergeJURA=bestandortstypengdfmerge[bestandortstypengdfmerge["regionid"]==1]
 bestandortstypengdfmergeMittelland=bestandortstypengdfmerge[bestandortstypengdfmerge["regionid"]==2]
 bestandortstypengdfmergeAlpen=bestandortstypengdfmerge[bestandortstypengdfmerge["regionid"]==3]
@@ -216,13 +215,13 @@ areastatisticsJura=areastatisticsJura.merge(joinJura[["BEeinheit","Priorisierung
 areastatisticsMittelland=areastatisticsMittelland.merge(joinML[["BEeinheit","Priorisierung Mittelland"]], on='BEeinheit',how="left")
 areastatisticsAlpen=areastatisticsAlpen.merge(joinA[["BEeinheit","Priorisierung Alpen"]], on='BEeinheit',how="left")
 
-areastatisticsJura.to_excel(outdir+"/areastatisticsJura_rcp85.xlsx")
-areastatisticsMittelland.to_excel(outdir+"/areastatisticsMittelland_rcp85.xlsx")
-areastatisticsAlpen.to_excel(outdir+"/areastatisticsAlpen_rcp85.xlsx")
+areastatisticsJura.to_excel(outdir+"/areastatisticsJura_rcp45.xlsx")
+areastatisticsMittelland.to_excel(outdir+"/areastatisticsMittelland_rcp45.xlsx")
+areastatisticsAlpen.to_excel(outdir+"/areastatisticsAlpen_rcp45.xlsx")
 
 
 #arrondiertes file
-bestandortstypenarrondiertgdf=gpd.read_file(outdir+"/"+"bestandortstypenarrondiert_rcp85.shp")
+bestandortstypenarrondiertgdf=gpd.read_file(outdir+"/"+"bestandortstypenarrondiert_rcp45.shp")
 bestandortstypenarrondiertgdf["region"]=""
 bestandortstypenarrondiertgdf.loc[bestandortstypenarrondiertgdf["regionid"]==1,"region"]="Berner Jura"
 bestandortstypenarrondiertgdf.loc[bestandortstypenarrondiertgdf["regionid"]==2,"region"]="Mittelland"
@@ -246,5 +245,5 @@ bestandortstypenarrondiertgdfmerge.loc[(bestandortstypenarrondiertgdfmerge["regi
 bestandortstypenarrondiertgdfmerge.loc[(bestandortstypenarrondiertgdfmerge["regionid"]==3),"nais"]=bestandortstypenarrondiertgdfmerge["NaiS_LFI_M/A"]
 len(bestandortstypenarrondiertgdfmerge)
 
-bestandortstypenarrondiertgdfmerge.to_file(outdir+"/bestandortstypenarrondiertjoined_rcp85.shp")
+bestandortstypenarrondiertgdfmerge.to_file(outdir+"/bestandortstypenarrondiertjoined_rcp45.shp")
 print("exported joined shapefile")
