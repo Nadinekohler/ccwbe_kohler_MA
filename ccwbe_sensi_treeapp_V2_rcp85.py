@@ -15,6 +15,15 @@ from sqlalchemy import create_engine
 import xlrd
 import openpyxl
 
+#input data
+codeworkspace="E:/Masterarbeit/ccwbe_kohler_MA/ccwbe_kohler_MA"
+projectspace="E:/Masterarbeit/GIS"
+naismatrixdf=pd.read_excel(codeworkspace+"/"+"Matrix_Baum_inkl_collin_20210412_mit AbkuerzungenCLEAN.xlsx", dtype="str", engine='openpyxl')
+#projectionswegedf=pd.read_excel(codeworkspace+"/"+"L_Projektionswege_im_Klimawandel_18022020_export.xlsx", dtype="str", engine='openpyxl')
+#gr_tree_abbreviations_df=pd.read_excel(codeworkspace+"/"+"Baumarten_LFI_export.xls", dtype=str)
+#gr_tree_abbreviations_extract_df=gr_tree_abbreviations_df[gr_tree_abbreviations_df["Abkürzung_BK"].notnull()]
+#climatescenario="rcp45"
+climatescenario="rcp85"
 
 #*************************************
 #functions
@@ -182,18 +191,6 @@ def uebergangstandortbedeutung(baumart, standort1column, standort2column):
         outue="ex"
     return outue
 #*************************************
-
-#input data
-codeworkspace="E:/Masterarbeit/ccwbe_kohler_MA/ccwbe_kohler_MA"
-projectspace="E:/Masterarbeit/GIS"
-#naismatrixdf=pd.read_excel(codeworkspace+"/"+"Matrix_Baum_inkl_collin_20210412_mit AbkuerzungenCLEAN.xlsx", dtype="str", engine='openpyxl')
-#projectionswegedf=pd.read_excel(codeworkspace+"/"+"L_Projektionswege_im_Klimawandel_18022020_export.xlsx", dtype="str", engine='openpyxl')
-#gr_tree_abbreviations_df=pd.read_excel(codeworkspace+"/"+"Baumarten_LFI_export.xls", dtype=str)
-#gr_tree_abbreviations_extract_df=gr_tree_abbreviations_df[gr_tree_abbreviations_df["Abkürzung_BK"].notnull()]
-#climatescenario="rcp45"
-climatescenario="rcp85"
-
-
 
 
 #******************************************************************************************************
