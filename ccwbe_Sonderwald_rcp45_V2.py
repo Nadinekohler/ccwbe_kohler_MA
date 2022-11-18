@@ -168,30 +168,35 @@ maskarr=convert_tif_to_array(myworkspace+"/bemask.tif")
 maskarrbool=np.ones((nrows, ncols), dtype=bool)
 #fill the mask array
 maskarrbool=np.where(maskarr==1, False, maskarrbool)
+#plt.imshow(maskarrbool)
 
-
+#correct ph
+#ph=convert_tif_to_array(myworkspace+"/bephcombiarr.tif")
+#gadmengrimsel=convert_tif_to_array(myworkspace+"/gadmengrimsel.tif")
+#ph=np.where(((gadmengrimsel==1)&(ph>4)),4,ph)
+#convertarrtotif(ph, myworkspace+"/"+"bephcombiarr2.tif", 1, referenceraster, NODATA_value)
 
 bachschuttarr=convert_tif_to_array(myworkspace+"/beflozbuffer1_2_15m.tif")
 beflozbuffer1_6_30m_arr=convert_tif_to_array(myworkspace+"/sw13.tif")#beflozbuffer1_6_30m_schwemmebene.tif")
 buffer20marr=convert_tif_to_array(myworkspace+"/befloz79buffer20m.tif")
 #bachschuttarr=convert_tif_to_array(myworkspace+"/beflozbuffer30m.tif")
 hochmoorarr=convert_tif_to_array(myworkspace+"/behochmoor.tif")
-sumpfarr=convert_tif_to_array(myworkspace+"/besumpf_rcp85.tif") #entspricht SW7
+sumpfarr=convert_tif_to_array(myworkspace+"/besumpf_rcp45.tif") #entspricht SW7
 geroellarr=convert_tif_to_array(myworkspace+"/begeroell.tif")
 bergsturzarr=convert_tif_to_array(myworkspace+"/bebergsturzgeroell.tif")
 auarr=convert_tif_to_array(myworkspace+"/beauen.tif")
 felsarr=convert_tif_to_array(myworkspace+"/befels.tif")
-#rutscharr=convert_tif_to_array(myworkspace+"/berutsch.tif")
+rutscharr=convert_tif_to_array(myworkspace+"/berutsch.tif")
 sturztrajektorienarr=convert_tif_to_array(myworkspace+"/besturztrajektorien.tif")
 blockschuttarrarr=convert_tif_to_array(myworkspace+"/beblockschuttneu.tif")
-nadelsumpfarr=convert_tif_to_array(myworkspace+"/besumpfflachmooromhmsaosa_rcp85.tif") #beSW09.tif, vormals #benadelwaeldersumpfflachmooromhmsaosaJURA.tif  #entspricht SW9
-#sw14arr=convert_tif_to_array(myworkspace+"/beSW14_rcp45.tif")
+nadelsumpfarr=convert_tif_to_array(myworkspace+"/benadelwaeldersumpfflachmooromhmsaosaJURA_rcp45.tif") #SW09 ohne Jura, besumpfflachmooromhmsaosa_rcp45, vormals beSW09.tif, benadelwaeldersumpfflachmooromhmsaosaJURA.tif  #entspricht SW9
+sw14arr=convert_tif_to_array(myworkspace+"/SW9_Jura_digitalisiert.tif")
 begrossflozschwemmgebietarr=convert_tif_to_array(myworkspace+"/befloz7_9schwemmgebiet.tif")
 rissmoraenearr=convert_tif_to_array(myworkspace+"/berissmoranenausserhalbLGM.tif")
 slopearr=convert_tif_to_array(myworkspace+"/beslopeprz10m.tif")
 #wniarr=convert_tif_to_array(myworkspace+"/bewni.tif")
 slopearr=np.where(slopearr<0.0,0.0,slopearr)
-hoehenstufenarr=convert_tif_to_array(myworkspace+"/bevegetationshoehenstufen_rcp85.tif")
+hoehenstufenarr=convert_tif_to_array(myworkspace+"/bevegetationshoehenstufen_rcp45.tif")
 regionenarr=convert_tif_to_array(myworkspace+"/beregionenplus.tif")
 #behangschutt25przarr=convert_tif_to_array(myworkspace+"/behangschutt25prz.tif")
 behangschutt40przarr=convert_tif_to_array(myworkspace+"/behangschutt40prz.tif")
@@ -210,7 +215,7 @@ outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==2)&(slopearr>=0)&(slopearr
 outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==4)&(slopearr>=0)&(slopearr<=30)),1,outarr)
 outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==5)&(slopearr>=0)&(slopearr<=30)),1,outarr)
 outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==6)&(slopearr>=0)&(slopearr<=30)),1,outarr)
-#16 Bachschuttwald innerhalb Rissmoräne (1R) im Mittelland
+#16 Bachschuttwald innerhalb Rissmoräne (1R) im MIttelland
 outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==2)&(slopearr>=0)&(slopearr<=30)&(regionenarr==2)&(rissmoraenearr==1)),16,outarr)
 outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==4)&(slopearr>=0)&(slopearr<=30)&(regionenarr==2)&(rissmoraenearr==1)),16,outarr)
 outarr=np.where(((bachschuttarr==1)&(hoehenstufenarr==5)&(slopearr>=0)&(slopearr<=30)&(regionenarr==2)&(rissmoraenearr==1)),16,outarr)
@@ -246,7 +251,7 @@ outarr=np.where(((nadelsumpfarr==1)&(regionenarr==2)),9,outarr)
 outarr=np.where(((nadelsumpfarr==1)&(regionenarr==3)),9,outarr)
 outarr=np.where(((nadelsumpfarr==1)&(regionenarr==1)),14,outarr)
 #14
-#outarr=np.where((sw14arr==1),14,outarr) --> warum auskommentiert?
+outarr=np.where((sw14arr==1),14,outarr)
 #7;Sumpf-Gesellschaften (submontan, untermontan)
 outarr=np.where((sumpfarr==1),7,outarr)
 #8;Moor-Gesellschaften
@@ -262,6 +267,6 @@ np.max(outarr)
 outarr=np.where((maskarr!=1),NODATA_value,outarr)
 #plt.imshow(outarr)
 #write output
-convertarrtotif(outarr, myworkspace+"/"+"besonderwald_rcp85.tif", 1, referenceraster, NODATA_value)
+convertarrtotif(outarr, myworkspace+"/"+"besonderwald_rcp45_V2.tif", 1, referenceraster, NODATA_value)
 print("done ...")
 

@@ -33,12 +33,12 @@ import shapely.geometry as sg
 # *************************************************************
 #environment settings
 myworkspace="E:/Masterarbeit/GIS"
+myresults="E:/Masterarbeit/GIS/Modellergebnisse_221026"
 referenceraster=myworkspace+"/bedem10m.tif"
 codespace="E:/Masterarbeit/Parametertabelle"
-#outdir=myworkspace+"/out20220112_mitSturztrajektorien"
-outdir=myworkspace
+outdir=myresults
 #model parameter file
-parameterdf=pd.read_excel(codespace+"/"+"Anhang1_Parameter_Waldstandorte_BE_erweitert_220929.xlsx", dtype="str", engine='openpyxl')
+parameterdf=pd.read_excel(codespace+"/"+"Parametertabelle_2070-99_Waldstandorte_BE_221118.xlsx", dtype="str", engine='openpyxl')
 parameterdf.columns
 
 len(parameterdf)
@@ -129,8 +129,8 @@ if np.min(dhmarr)<NODATA_value:
 
 #read the shapefiles (NADINE)
 print("read shapefiles")
-bestandortstypengdf=(myworkspace+"/bestandortstypen_rcp45.shp")
-bestandortstypenarrondiertgdf=(myworkspace+"/bestandortstypenarrondiert_rcp45.shp")
+bestandortstypengdf=(myresults+"/bestandortstypen_rcp45.shp")
+bestandortstypenarrondiertgdf=(myresults+"/bestandortstypenarrondiert_rcp45.shp")
 
 #*****************************************************************************************************************
 
@@ -180,6 +180,7 @@ len(bestandortstypengdfmerge)
 
 bestandortstypengdfmerge.to_file(outdir+"/bestandortstypenjoined_rcp45.shp")
 print("exported joined  shapefile")
+
 
 #Nadine: Weiterer Schritt in der Toolbox braucht es nicht, da die Maske schon die Waldmaske ist!
 #Direkt weiter:

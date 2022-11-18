@@ -1,3 +1,12 @@
+#Projekt: Masterarbeit "xx"
+#Autor:in: Andreas Paul Zischg, Nadine Kohler
+
+#Modellierung der joinid's pro Standortstypen inkl. Arrondierung auf Grundlage der Parametertabelle und den Grundlagenkarten.
+#Für den Join der Parameter pro Standortstyp über die joinid muss ein separater Code verwendet werden
+
+# *************************************************************
+#Importiere Module
+# *************************************************************
 import os
 import numpy as np
 import pandas as pd
@@ -11,13 +20,9 @@ gtiff_driver=gdal.GetDriverByName("GTiff")
 import fiona
 import geopandas as gpd
 import os
-#import shapefile
 import shapely
-#import pyshp
 from osgeo import ogr
-#import psycopg2
 import sqlalchemy
-#import geoalchemy2
 from sqlalchemy import create_engine
 import xlrd
 import openpyxl
@@ -32,17 +37,21 @@ import shapely.geometry as sg
 
 # *************************************************************
 #environment settings
-#myworkspace="C:/DATA/projects/CCWBE_Kohler/GIS"
-myworkspace="E:/Masterarbeit/GIS"
+# *************************************************************
+myworkspace="C:/DATA/projects/CCWBE_Kohler/GIS"
+#myworkspace="E:/Masterarbeit/GIS"
 referenceraster=myworkspace+"/bedem10m.tif"
-codespace="E:/Masterarbeit/Parametertabelle"
-#codespace="C:/DATA/develops/ccwbe_kohler_MA"
+#codespace="E:/Masterarbeit/Parametertabelle"
+codespace="C:/DATA/develops/ccwbe_kohler_MA"
 #outdir=myworkspace+"/out20220112_mitSturztrajektorien"
 outdir=myworkspace+"/Modellergebnisse"
-#model parameter file
-parameterdf=pd.read_excel(codespace+"/"+"Anhang1_Parameter_Waldstandorte_BE_erweitert_220929.xlsx", dtype="str", engine='openpyxl')
+#link to parameter table
+parameterdf=pd.read_excel(codespace+"/"+"Parametertabelle_2070-99_Waldstandorte_BE_221118.xlsx", dtype="str", engine='openpyxl')
 parameterdf.columns
 
+# *************************************************************
+#xx
+# *************************************************************
 len(parameterdf)
 parameterdf.dtypes
 parameterdf=parameterdf.astype({"Sonderwald":str})
@@ -55,20 +64,24 @@ thresholdforminimumtotalscorefoehre=0.75
 thresholdforminimumtotalscorefoehregroesser4ha=0.6
 cellsize=10.0
 listetongehalt=[11,12,22,23,33,34,44]
-gewichtunglage=5.0 #Nadine: Gewichtung wegen unterschiedlich guten Datengrundlagen?
+
+# *************************************************************
+#Gewichtungsfaktoren
+# *************************************************************
+gewichtunglage=5.0
 gewichtungexposition=5.0
 gewichtungfeuchte=2.0
 gewichtungneigung=5.0
 gewichtunggruendigkeit=3.0
 gewichtungph=3.0
 gewichtungtg=3.0
-#gewichtungsonderwald=5.0
 gewichtungarve=5.0
 gewichtungbergfoehre=5.0
 gewichtungwaldfoehre=5.0
 
-
+# *************************************************************
 #Formparameter Score Funktionen
+# *************************************************************
 x_abweichungexposition = np.array([0.0,10.0,20.0,30.0,360.0])
 y_abweichungexposition = np.array([1.0,0.9,0.7,0.1,0.1])
 f_delta_z_exposition=interp1d(x_abweichungexposition,y_abweichungexposition, kind="linear")
@@ -132,7 +145,7 @@ f_nass = interp1d(x_bodenfeuchte, y_nass, kind="linear")
 
 
 #*************************************************************
-#functions
+#Funktionen
 #*************************************************************
 def convert_tif_to_array(intifraster):
     inras = gdal.Open(intifraster)
@@ -705,25 +718,11 @@ def polygonize(da: xr.DataArray) -> gpd.GeoDataFrame:
     gdf = gpd.GeoDataFrame({"value": colvalues, "geometry": geometries})
     gdf.crs = da.attrs.get("crs")
     return gdf
-# *************************************************************
-#end functions
-# *************************************************************
 
-#test
-#testarr=scorehangneigungbe(70, 80, "","")
-#plt.imshow(testarr)
-#convertarrtotif((testarr*100).astype(int), outdir + "/" + "testarr.tif", indatatypeint, referenceraster, NODATA_value)
-#plt.imshow(testarr)
-#testarr=scorelagebe(1,"")
-#convertarrtotif((testarr*100).astype(int), outdir + "/" + "testarr.tif", indatatypeint, referenceraster, NODATA_value)
-#testarr=scoresonderwaldbe(1,"")
-#convertarrtotif((testarr*100).astype(int), outdir + "/" + "testarr.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif((f_scorehangneigung(abweichungarr)*100).astype(int), outdir + "/" + "testscorearr.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif((abweichungarr).astype(int), outdir + "/" + "testabwarr.tif", indatatypeint, referenceraster, NODATA_value)
 
-#**************************************************************************************************************
-#read the rasters
-#reference tif raster
+# *************************************************************
+#read reference raster
+# *************************************************************
 print("read reference raster")
 referencetifraster=gdal.Open(referenceraster)
 referencetifrasterband=referencetifraster.GetRasterBand(1)
@@ -735,8 +734,10 @@ indatatypeint=gdal.Open(myworkspace+"/bemask.tif").GetRasterBand(1).DataType
 dhmarr=convert_tif_to_array(myworkspace+"/bedem10m.tif")
 if np.min(dhmarr)<NODATA_value:
     dhmarr=np.where((dhmarr<NODATA_value),NODATA_value,dhmarr)
-#NODATA_value=np.min(dhmarr)
-#*****************************************************************************************************************
+
+
+
+# *************************************************************
 #create a mask array
 print("create a mask")
 maskarr=convert_tif_to_array(myworkspace+"/bemask.tif")
@@ -744,14 +745,14 @@ maskarrbool=np.ones((nrows, ncols), dtype=bool)
 #fill the mask array
 maskarrbool=np.where(maskarr==1, False, maskarrbool)
 #plt.imshow(maskarrbool)
-#*****************************************************************************************************************
+
+
+# *************************************************************
+#read rasters
+# *************************************************************
 print("read rasters")
-#sonderwaldarr=convert_tif_to_array(myworkspace+"/besonderwald.tif")
-sonderwaldarr=convert_tif_to_array(myworkspace+"/besonderwald_rcp45.tif")
-#felsarr=convert_tif_to_array(myworkspace+"/befels.tif")
+sonderwaldarr=convert_tif_to_array(myworkspace+"/besonderwald.tif")
 lagearr=convert_tif_to_array(myworkspace+"/belage.tif")
-#pharr=convert_tif_to_array(myworkspace+"/bebodenreaktionverfeinert.tif")
-#phkoboarr=convert_tif_to_array(myworkspace+"/bephkoboclass.tif")
 expositionarr=convert_tif_to_array(myworkspace+"/beaspect.tif")
 slopearr=convert_tif_to_array(myworkspace+"/beslopeprz10m.tif")
 slopearr=np.where(slopearr<0.0,0.0,slopearr)
@@ -773,50 +774,36 @@ waldfoehrenarr=np.where((waldfoehrenarr==3),NODATA_value,waldfoehrenarr)
 wniarr=convert_tif_to_array(myworkspace+"/bewni.tif")
 np.max(wniarr)
 waldarr=convert_tif_to_array(myworkspace+"/bewaldbuffer20mgebueschwald.tif")
-arvenfoehrenhektararr=convert_tif_to_array(myworkspace+"/bearvenfoehrenhektar.tif") #Nadine: braucht es diesen Datensatz für Zukunft?
+arvenfoehrenhektararr=convert_tif_to_array(myworkspace+"/bearvenfoehrenhektar.tif")
 arvenfoehrenhektararr=np.where((arvenfoehrenhektararr==65535),0,arvenfoehrenhektararr)
 np.max(arvenfoehrenhektararr)
-#loesche Gebueschwald in OM #Nadine: bleibt das so in der Zukunft?
 np.max(gebueschwaldarr)
 gebueschwaldarr=np.where(((gebueschwaldarr==1)&(hoehenstufenarr==6)),np.min(gebueschwaldarr),gebueschwaldarr)
 gebueschwaldarr=np.where(((gebueschwaldarr==2)&(hoehenstufenarr==6)),np.min(gebueschwaldarr),gebueschwaldarr)
 aarmassivarr=convert_tif_to_array(myworkspace+"/aarmassiv.tif")
-#convertarrtotif(gebueschwaldarr, myworkspace+"/"+"beschrubforest_ohneOM.tif", indatatypeint, referenceraster, NODATA_value)
-#phcombiarr=np.where(regionenarr==2,phkoboarr,pharr)
-#phcombiarr=np.where((phcombiarr==0),pharr,phcombiarr)
-#phcombiarr=np.where((phcombiarr<0),pharr,phcombiarr)
-#phcombiarr=np.where((maskarr!=1),NODATA_value,phcombiarr)
-#phcombiarr=np.where((wasserarr==1),NODATA_value,phcombiarr)
-#convertarrtotif(phcombiarr, myworkspace+"/"+"bephcombiarr.tif", indatatypeint, referenceraster, NODATA_value)
-#plt.imshow(phcombiarr)
-#del pharr
-#del phkoboarr
-#*****************************************************************************************************************
+
 #create output array
 outarr=np.zeros((nrows, ncols), dtype=int)
 outarr[:]=NODATA_value
 outscorearr=np.zeros((nrows, ncols), dtype=float)
 
-# ***********
-#iteration through parameter table Uebrige Flaechen
+# *************************************************************
+#Iterationen durch Parameter
+# *************************************************************
+
+#Grundgesellschaften
 print("Uebrige Flaechen")
 parameterdf.columns
 len(parameterdf)
 parameterdfuebrige=parameterdf[((parameterdf["Sonderwald"].astype(str).str.contains("0")))]
 parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["Sonderwald"].astype(str).str.contains("10")))]
-#parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["Ju Bfö"].isin(["x","y","m","a","z"])))]
-#parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["Ju Wfö"].isin(["x","y","m","a","z"])))]
 parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["M/A Arve"].isin(["x","y","m","a","z"])))]
 parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["M/A Bfö"].isin(["x","y","m","a","z"])))]
 parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["M/A Wfö"].isin(["x","y","m","a","z"])))]
-#parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["Fels"].isin(["x","s"])))]
 parameterdfuebrige=parameterdfuebrige[((~parameterdfuebrige["Gebüschwald"].isin(["AV","LF","MoorLF"])))]
-#parameterdfuebrige=parameterdfuebrige[(~parameterdfuebrige["Subregionen"].isin(['WNI']))]
 len(parameterdfuebrige)
 gewichtunguebrige=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfuebrige.iterrows():
-    #print(row["joinid"])
-    #WNI Flaechen
     if row["Subregionen"]=="WNI":
         scorewniarr = np.where((wniarr == 1), 1.0, 0.0)
         scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
@@ -839,8 +826,6 @@ for index, row in parameterdfuebrige.iterrows():
         scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
         scorepharr = scorephbe(row["pH"], row["pH scharf"])
         scoretgarr = scoretgbe(row)
-        #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
-        #scoresonderwaldarr = np.where((sonderwaldarr==0),1.0,0.0)
         uebrigetotalscorearr=scoreregionhoehenstufearr*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtunguebrige
         outarr=np.where((uebrigetotalscorearr>outscorearr),int(row["joinid"]),outarr)
         outscorearr=np.where((uebrigetotalscorearr>outscorearr),uebrigetotalscorearr,outscorearr)
@@ -848,16 +833,11 @@ outarr=np.where((wasserarr==1),NODATA_value,outarr)
 outscorearr=np.where((wasserarr==1),NODATA_value,outscorearr)
 outarr=np.where((maskarr!=1),NODATA_value,outarr)
 outscorearr=np.where((maskarr!=1),NODATA_value,outscorearr)
-#convertarrtotif((outscorearr*100).astype(int), outdir + "/" + "uebrigetotalscorearr.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarr, outdir + "/" + "uebrigeoutarr.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarr,outdir+"/uebrigeoutarr.sav")
-#joblib.dump(outscorearr,outdir+"/uebrigeoutscorearr.sav")
 del uebrigetotalscorearr
-#outarr=joblib.load(outdir+"/uebrigeoutarr.sav")
-#outscorearr=joblib.load(outdir+"/uebrigeoutscorearr.sav")
 
-# ***********
-#Fels
+
+# *************************************************************
+#Fels ausserhalb Kristallin
 print("Fels")
 outarrfels=np.zeros((nrows, ncols), dtype=int)
 outarrfels[:]=NODATA_value
@@ -880,9 +860,6 @@ for index, row in parameterdffels.iterrows():
     elif row["Fels"]=="s":
         scorefelsarr=np.where(((sonderwaldarr==5)&(aarmassivarr<1)),0.5,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -890,7 +867,6 @@ for index, row in parameterdffels.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     felstotalscorearr=scorefelsarr*scoreregionhoehenstufearr*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungfels
     outarrfels = np.where(((felstotalscorearr > thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr<1)&(felstotalscorearr>=outscorearrfels)), int(row["joinid"]), outarrfels)
     outscorearrfels = np.where(((felstotalscorearr > thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr<1)&(felstotalscorearr>=outscorearrfels)), felstotalscorearr, outscorearrfels)
@@ -900,15 +876,11 @@ outarrfels=np.where((maskarr!=1),NODATA_value,outarrfels)
 outscorearrfels=np.where((maskarr!=1),NODATA_value,outscorearrfels)
 outarrfels=np.where((sonderwaldarr!=5),NODATA_value,outarrfels)
 outscorearrfels=np.where((sonderwaldarr!=5),NODATA_value,outscorearrfels)
-#convertarrtotif(outarrfels, outdir + "/" + "outarrfels.tif", indatatypeint, referenceraster,NODATA_value)
-#convertarrtotif((outscorearrfels*100).astype(int), outdir + "/" + "outscorearrfels.tif", indatatypeint, referenceraster, NODATA_value)
-#joblib.dump(outarrfels,outdir+"/outarrfels.sav")
-#joblib.dump(outscorearrfels,outdir+"/outscorearrfels.sav")
 del scorefelsarr
 del felstotalscorearr
-#outarrfels=joblib.load(outdir+"/outarrfels.sav")
-#outscorearrfels=joblib.load(outdir+"/outscorearrfels.sav")
 
+# *************************************************************
+#Fels  Kristallin
 print("Fels kristallin")
 outarrfelskristallin=np.zeros((nrows, ncols), dtype=int)
 outarrfelskristallin[:]=NODATA_value
@@ -931,9 +903,6 @@ for index, row in parameterdffelskristallin.iterrows():
     elif row["FelsKristallin"]=="s":
         scorefelsarr=np.where(((sonderwaldarr==5)&(aarmassivarr==1)),0.5,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -941,7 +910,6 @@ for index, row in parameterdffelskristallin.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     felstotalscorearr=scorefelsarr*scoreregionhoehenstufearr*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungfels
     outarrfelskristallin = np.where(((felstotalscorearr > thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr==1)&(felstotalscorearr>=outscorearrfelskristallin)), int(row["joinid"]), outarrfelskristallin)
     outscorearrfelskristallin = np.where(((felstotalscorearr > thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr==1)&(felstotalscorearr>=outscorearrfelskristallin)), felstotalscorearr, outscorearrfelskristallin)
@@ -951,18 +919,11 @@ outarrfelskristallin=np.where((maskarr!=1),NODATA_value,outarrfelskristallin)
 outscorearrfelskristallin=np.where((maskarr!=1),NODATA_value,outscorearrfelskristallin)
 outarrfelskristallin=np.where(((sonderwaldarr!=5)&(aarmassivarr==1)),NODATA_value,outarrfelskristallin)
 outscorearrfelskristallin=np.where(((sonderwaldarr!=5)&(aarmassivarr==1)),NODATA_value,outscorearrfelskristallin)
-#convertarrtotif(outarrfels, outdir + "/" + "outarrfels.tif", indatatypeint, referenceraster,NODATA_value)
-#convertarrtotif((outscorearrfels*100).astype(int), outdir + "/" + "outscorearrfels.tif", indatatypeint, referenceraster, NODATA_value)
-#joblib.dump(outarrfels,outdir+"/outarrfels.sav")
-#joblib.dump(outscorearrfels,outdir+"/outscorearrfels.sav")
 del scorefelsarr
 del felstotalscorearr
-#outarrfels=joblib.load(outdir+"/outarrfels.sav")
-#outscorearrfels=joblib.load(outdir+"/outscorearrfels.sav")
 
-
-# ***********
-#iteration through parameter Arve, Waldfoehre, Bergfoehre
+# *************************************************************
+#Parameter Arve, Waldfoehre, Bergfoehre
 #Arve
 print("Arve")
 outarrarve=np.zeros((nrows, ncols), dtype=int)
@@ -982,7 +943,6 @@ for index, row in parameterdfarven.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     arvetotalscorearr=scorearvearr*scoreregionhoehenstufearr*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungsumarve
     outarrarve = np.where(((arvetotalscorearr > thresholdforminimumtotalscore)&(arvenarr==1)&(arvetotalscorearr>=outscorearrarve)), int(row["joinid"]), outarrarve)
     outscorearrarve = np.where(((arvetotalscorearr > thresholdforminimumtotalscore)&(arvenarr==1)&(arvetotalscorearr>=outscorearrarve)), arvetotalscorearr,outscorearrarve)
@@ -992,15 +952,8 @@ outarrarve=np.where((maskarr!=1),NODATA_value,outarrarve)
 outscorearrarve=np.where((maskarr!=1),NODATA_value,outscorearrarve)
 outarrarve=np.where((arvenarr!=1),NODATA_value,outarrarve)
 outscorearrarve=np.where((arvenarr!=1),NODATA_value,outscorearrarve)
-#convertarrtotif((outscorearrarve*100.0).astype(int), outdir + "/" + "outscorearrarve.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrarve, outdir + "/" + "outarrarve.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrarve,outdir+"/outarrarve.sav")
-#joblib.dump(outscorearrarve,outdir+"/outscorearrarve.sav")
 del arvetotalscorearr
 del scorearvearr
-#outarrarve=joblib.load(outdir+"/outarrarve.sav")
-#outscorearrarve=joblib.load(outdir+"/outscorearrarve.sav")
-
 
 
 #Bergfoehre
@@ -1022,7 +975,6 @@ for index, row in parameterdfbergfoehre.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     bergfoehretotalscorearr=scorebergfoehrearr*scoreregionhoehenstufearr*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungsumbergfoehre
     outarrbf = np.where(((bergfoehretotalscorearr > thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(bergfoehretotalscorearr>=outscorearrbf)), int(row["joinid"]), outarrbf)
     outscorearrbf = np.where(((bergfoehretotalscorearr > thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(bergfoehretotalscorearr>=outscorearrbf)), bergfoehretotalscorearr,outscorearrbf)
@@ -1032,12 +984,6 @@ outarrbf=np.where((maskarr!=1),NODATA_value,outarrbf)
 outscorearrbf=np.where((maskarr!=1),NODATA_value,outscorearrbf)
 outarrbf=np.where((bergfoehrenarr!=1),NODATA_value,outarrbf)
 outscorearrbf=np.where((bergfoehrenarr!=1),NODATA_value,outscorearrbf)
-#convertarrtotif(outarrbf, outdir + "/" + "outarrbf.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif((outscorearrbf*100).astype(int), outdir + "/" + "outscorearrbf.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrbf,outdir+"/outarrbf.sav")
-#joblib.dump(outscorearrbf,outdir+"/outscorearrbf.sav")
-#outarrbf=joblib.load(outdir+"/outarrbf.sav")
-#outscorearrbf=joblib.load(outdir+"/outscorearrbf.sav")
 
 #Waldfoehre
 print("Waldfoehre")
@@ -1058,7 +1004,6 @@ for index, row in parameterdfwaldfoehre.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     waldfoehretotalscorearr=scorewaldfoehrearr*scoreregionhoehenstufearr*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungsumwaldfoehre
     outarrwf = np.where(((waldfoehretotalscorearr > thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(waldfoehretotalscorearr>=outscorearrwf)), int(row["joinid"]), outarrwf)
     outscorearrwf = np.where(((waldfoehretotalscorearr > thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(waldfoehretotalscorearr>=outscorearrwf)), waldfoehretotalscorearr, outscorearrwf)
@@ -1068,16 +1013,12 @@ outarrwf=np.where((maskarrbool==True),NODATA_value,outarrwf)
 outscorearrwf=np.where((maskarrbool==True),NODATA_value,outscorearrwf)
 outarrwf=np.where((waldfoehrenarr!=1),NODATA_value,outarrwf)
 outscorearrwf=np.where((waldfoehrenarr!=1),NODATA_value,outscorearrwf)
-#convertarrtotif((outscorearrwf*100).astype(int), outdir + "/" + "outscorearrwf.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrwf, outdir + "/" + "outarrwf.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrwf,outdir+"/outarrwf.sav")
-#joblib.dump(outscorearrwf,outdir+"/outscorearrwf.sav")
-#outarrwf=joblib.load(outdir+"/outarrwf.sav")
-#outscorearrwf=joblib.load(outdir+"/outscorearrwf.sav")
 
-# ***********
+
+# *************************************************************
 #Sonderwald
 print("Sonderwald")
+#Sonderwald 6: Auen
 print("6 Auen")
 outarrau=np.zeros((nrows, ncols), dtype=int)
 outarrau[:]=NODATA_value
@@ -1095,12 +1036,9 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==6),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==6),1.0,0.0)
     scoresonderwaldarr = np.where((sonderwaldarr == 12), 1.0, scoresonderwaldarr)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1119,15 +1057,10 @@ outarrau=np.where((maskarr!=1),NODATA_value,outarrau)
 outscorearrau=np.where((maskarr!=1),NODATA_value,outscorearrau)
 outarrau=np.where(((sonderwaldarr==6)|(sonderwaldarr==12)),outarrau,NODATA_value)
 outscorearrau=np.where(((sonderwaldarr==6)|(sonderwaldarr==12)),outarrau,NODATA_value)
-#convertarrtotif((outscorearrau*100).astype(int), outdir + "/" + "outscorearrau.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrau, outdir + "/" + "outarrau.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrau,outdir+"/outarrau.sav")
-#joblib.dump(outscorearrau,outdir+"/outscorearrau.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
-#outarrau=joblib.load(outdir+"/outarrau.sav")
-#outscorearrau=joblib.load(outdir+"/outscorearrau.sav")
 
+#Sonderwald 2: Bergsturz
 print("2 Bergsturz")
 outarrbs=np.zeros((nrows, ncols), dtype=int)
 outarrbs[:]=NODATA_value
@@ -1145,11 +1078,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==2),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==2),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1166,16 +1096,10 @@ outarrbs=np.where((maskarr!=1),NODATA_value,outarrbs)
 outscorearrbs=np.where((maskarr!=1),NODATA_value,outscorearrbs)
 outarrbs=np.where((sonderwaldarr!=2),NODATA_value,outarrbs)
 outscorearrbs=np.where((sonderwaldarr!=2),NODATA_value,outscorearrbs)
-#convertarrtotif((outscorearrbs*100).astype(int), outdir + "/" + "outscorearrbergsturz.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrbs, outdir + "/" + "outarrbergsturz.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrbs,outdir+"/outarrbs.sav")
-#joblib.dump(outscorearrbs,outdir+"/outscorearrbs.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
-#outarrbs=joblib.load(outdir+"/outarrbs.sav")
-#outscorearrbs=joblib.load(outdir+"/outscorearrbs.sav")
 
-
+#Sonderwald 3: Geröll/Schutt ausserhalb Kristallin
 print("3 Geroell/Schutt ausserhalb Kristallin")
 outarrgeroell=np.zeros((nrows, ncols), dtype=int)
 outarrgeroell[:]=NODATA_value
@@ -1193,11 +1117,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==3),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==3),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1214,15 +1135,10 @@ outarrgeroell=np.where((maskarr!=1),NODATA_value,outarrgeroell)
 outscorearrgeroell=np.where((maskarr!=1),NODATA_value,outscorearrgeroell)
 outarrgeroell=np.where((sonderwaldarr!=3),NODATA_value,outarrgeroell)
 outscorearrgeroell=np.where((sonderwaldarr!=3),NODATA_value,outscorearrgeroell)
-#convertarrtotif((outscorearrgeroell*100).astype(int), outdir + "/" + "outscorearrgeroell.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrgeroell, outdir + "/" + "outarrgeroell.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrgeroell,outdir+"/outarrgeroell.sav")
-#joblib.dump(outscorearrgeroell,outdir+"/outscorearrgeroell.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
-#outarrgeroell=joblib.load(outdir+"/outarrgeroell.sav")
-#outscorearrgeroell=joblib.load(outdir+"/outscorearrgeroell.sav")
 
+#Sonderwald 19: Geröll/Schutt im Kristallin
 print("19 Geroell/Schutt im Kristallin")
 outarrgeroellkristallin=np.zeros((nrows, ncols), dtype=int)
 outarrgeroellkristallin[:]=NODATA_value
@@ -1239,11 +1155,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==19),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==19),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1263,7 +1176,7 @@ outscorearrgeroellkristallin=np.where((sonderwaldarr!=3),NODATA_value,outscorear
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
-
+#Sonderwald 4: Blockschutt
 print("4 Blockschutt")
 outarrblockschutt=np.zeros((nrows, ncols), dtype=int)
 outarrblockschutt[:]=NODATA_value
@@ -1281,11 +1194,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==4),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==4),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1302,16 +1212,10 @@ outarrblockschutt=np.where((maskarr!=1),NODATA_value,outarrblockschutt)
 outscorearrblockschutt=np.where((maskarr!=1),NODATA_value,outscorearrblockschutt)
 outarrblockschutt=np.where((sonderwaldarr!=4),NODATA_value,outarrblockschutt)
 outscorearrblockschutt=np.where((sonderwaldarr!=4),NODATA_value,outscorearrblockschutt)
-#convertarrtotif((outscorearrblockschutt*100).astype(int), outdir + "/" + "outscorearrblockschutt.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrblockschutt, outdir + "/" + "outarrblockschutt.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrblockschutt,outdir+"/outarrblockschutt.sav")
-#joblib.dump(outscorearrblockschutt,outdir+"/outscorearrblockschutt.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
-#outarrblockschutt=joblib.load(outdir+"/outarrblockschutt.sav")
-#outscorearrblockschutt=joblib.load(outdir+"/outscorearrblockschutt.sav")
 
-
+#Sonderwald 7: Sumpf
 print("7 Sumpf")
 outarrsumpf=np.zeros((nrows, ncols), dtype=int)
 outarrsumpf[:]=NODATA_value
@@ -1329,11 +1233,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==7),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==7),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1350,16 +1251,10 @@ outarrsumpf=np.where((maskarr!=1),NODATA_value,outarrsumpf)
 outscorearrsumpf=np.where((maskarr!=1),NODATA_value,outscorearrsumpf)
 outarrsumpf=np.where((sonderwaldarr!=7),NODATA_value,outarrsumpf)
 outscorearrsumpf=np.where((sonderwaldarr!=7),NODATA_value,outscorearrsumpf)
-#convertarrtotif((outscorearrsumpf*100).astype(int), outdir + "/" + "outscorearrsumpf.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrsumpf, outdir + "/" + "outarrsumpf.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrsumpf,outdir+"/outarrsumpf.sav")
-#joblib.dump(outscorearrsumpf,outdir+"/outscorearrsumpf.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
-#outarrsumpf=joblib.load(outdir+"/outarrsumpf.sav")
-#outscorearrsumpf=joblib.load(outdir+"/outscorearrsumpf.sav")
 
-
+#Sonderwald 8: Moor
 print("8 Moor")
 outarrmoor=np.zeros((nrows, ncols), dtype=int)
 outarrmoor[:]=NODATA_value
@@ -1377,11 +1272,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==8),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==8),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1398,13 +1290,11 @@ outarrmoor=np.where((maskarr!=1),NODATA_value,outarrmoor)
 outscorearrmoor=np.where((maskarr!=1),NODATA_value,outscorearrmoor)
 outarrmoor=np.where((sonderwaldarr!=8),NODATA_value,outarrmoor)
 outscorearrmoor=np.where((sonderwaldarr!=8),NODATA_value,outscorearrmoor)
-#convertarrtotif((outscorearrmoor*100).astype(int), outdir + "/" + "outscorearrmoor.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrmoor, outdir + "/" + "outarrmoor.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrmoor,outdir+"/outarrmoor.sav")
-#joblib.dump(outscorearrmoor,outdir+"/outscorearrmoor.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
+
+#Sonderwald 9: Nadelwälder auf sumpfigen Standorten
 print("9 Nadelwaelder auf sumpfigen Standorten")
 outarrnadelsumpf=np.zeros((nrows, ncols), dtype=int)
 outarrnadelsumpf[:]=NODATA_value
@@ -1423,11 +1313,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==9),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==9),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1444,13 +1331,10 @@ outarrnadelsumpf=np.where((maskarr!=1),NODATA_value,outarrnadelsumpf)
 outscorearrnadelsumpf=np.where((maskarr!=1),NODATA_value,outscorearrnadelsumpf)
 outarrnadelsumpf=np.where((sonderwaldarr!=9),NODATA_value,outarrnadelsumpf)
 outscorearrnadelsumpf=np.where((sonderwaldarr!=9),NODATA_value,outscorearrnadelsumpf)
-#convertarrtotif((outscorearrnadelsumpf*100).astype(int), outdir + "/" + "outscorearrnadelsumpf.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrnadelsumpf, outdir + "/" + "outarrnadelsumpf.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrnadelsumpf,outdir+"/outarrnadelsumpf.sav")
-#joblib.dump(outscorearrnadelsumpf,outdir+"/outscorearrnadelsumpf.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
+#Sonderwald 10: Überschwemmbare Flächen
 print("10 Ueberschwemmbare Flaechen")
 outarrflussbuffer=np.zeros((nrows, ncols), dtype=int)
 outarrflussbuffer[:]=NODATA_value
@@ -1467,11 +1351,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==10),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==10),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1488,14 +1369,10 @@ outarrflussbuffer=np.where((maskarr!=1),NODATA_value,outarrflussbuffer)
 outscorearrflussbuffer=np.where((maskarr!=1),NODATA_value,outscorearrflussbuffer)
 outarrflussbuffer=np.where((sonderwaldarr!=10),NODATA_value,outarrflussbuffer)
 outscorearrflussbuffer=np.where((sonderwaldarr!=10),NODATA_value,outscorearrflussbuffer)
-#convertarrtotif((outscorearrflussbuffer*100).astype(int), outdir + "/" + "outscorearrflussbuffer.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrflussbuffer, outdir + "/" + "outarrflussbuffer.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrflussbuffer,outdir+"/outarrflussbuffer.sav")
-#joblib.dump(outscorearrflussbuffer,outdir+"/outscorearrflussbuffer.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
-#Sonderwald 11 Rissmoraene
+#Sonderwald 11: Rissmoraene
 print("11 Riss Moraene")
 outarrrissmoraene=np.zeros((nrows, ncols), dtype=int)
 outarrrissmoraene[:]=NODATA_value
@@ -1505,11 +1382,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==11),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==11),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1526,14 +1400,10 @@ outarrrissmoraene=np.where((maskarr!=1),NODATA_value,outarrrissmoraene)
 outscorearrrissmoraene=np.where((maskarr!=1),NODATA_value,outscorearrrissmoraene)
 outarrrissmoraene=np.where((sonderwaldarr!=11),NODATA_value,outarrrissmoraene)
 outscorearrrissmoraene=np.where((sonderwaldarr!=11),NODATA_value,outscorearrrissmoraene)
-#convertarrtotif((outscorearrrissmoraene*100).astype(int), outdir + "/" + "outscorearrrissmoraene.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrrissmoraene, outdir + "/" + "outarrrissmoraene.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrrissmoraene,outdir+"/outarrrissmoraene.sav")
-#joblib.dump(outscorearrrissmoraene,outdir+"/outscorearrrissmoraene.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
-#Sonderwald 15 Mittelland ausserhalb Rissmoraene
+#Sonderwald 15: Mittelland ausserhalb Rissmoraene
 print("15 ausserhalb Riss Moraene")
 outarr15=np.zeros((nrows, ncols), dtype=int)
 outarr15[:]=NODATA_value
@@ -1543,11 +1413,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where(((sonderwaldarr==0)&(regionenarr==2)),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where(((sonderwaldarr==0)&(regionenarr==2)),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1564,15 +1431,11 @@ outarr15=np.where((maskarr!=1),NODATA_value,outarr15)
 outscorearr15=np.where((maskarr!=1),NODATA_value,outscorearr15)
 outarr15=np.where(((sonderwaldarr==0)&(regionenarr==2)),outarr15, NODATA_value)
 outscorearr15=np.where(((sonderwaldarr==0)&(regionenarr==2)),outscorearr15,NODATA_value)
-#convertarrtotif((outscorearr15*100).astype(int), outdir + "/" + "outscorearr15.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarr15, outdir + "/" + "outarr15.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarr15,outdir+"/outarr15.sav")
-#joblib.dump(outscorearr15,outdir+"/outscorearr15.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
 
-#Sonderwald 16-Bachschuttwald innerhalb Rissmoraene (1R) im Mittelland
+#Sonderwald 16: Bachschuttwald innerhalb Rissmoraene (1R) im Mittelland
 print("16 Bachschuttwald innerhalb Rissmoraene (1R) im Mittelland")
 outarr16=np.zeros((nrows, ncols), dtype=int)
 outarr16[:]=NODATA_value
@@ -1582,11 +1445,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==16),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==16),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1603,15 +1463,11 @@ outarr16=np.where((maskarr!=1),NODATA_value,outarr16)
 outscorearr16=np.where((maskarr!=1),NODATA_value,outscorearr16)
 outarr16=np.where((sonderwaldarr!=16),NODATA_value,outarr16)
 outscorearr16=np.where((sonderwaldarr!=16),NODATA_value,outscorearr16)
-#convertarrtotif((outscorearr16*100).astype(int), outdir + "/" + "outscorearr16.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarr16, outdir + "/" + "outarr16.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarr16,outdir+"/outarr16.sav")
-#joblib.dump(outscorearr16,outdir+"/outscorearr16.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
 
-#Sonderwald 17-Bachschuttwald innerhalb Rissmoraene (1R) im Mittelland
+#Sonderwald 17-Bachschuttwald ausserhalb Rissmoraene (1R) im Mittelland
 print("17 Bachschuttwald ausserhalb Rissmoraene (1W) im Mittelland")
 outarr17=np.zeros((nrows, ncols), dtype=int)
 outarr17[:]=NODATA_value
@@ -1621,11 +1477,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==17),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==17),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1642,16 +1495,12 @@ outarr17=np.where((maskarr!=1),NODATA_value,outarr17)
 outscorearr17=np.where((maskarr!=1),NODATA_value,outscorearr17)
 outarr17=np.where((sonderwaldarr!=17),NODATA_value,outarr17)
 outscorearr17=np.where((sonderwaldarr!=17),NODATA_value,outscorearr17)
-#convertarrtotif((outscorearr17*100).astype(int), outdir + "/" + "outscorearr17.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarr17, outdir + "/" + "outarr17.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarr17,outdir+"/outarr17.sav")
-#joblib.dump(outscorearr17,outdir+"/outscorearr17.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
 
 
-#Sonderwald 12 Aktive Au
+#Sonderwald 12: Aktive Au
 print("12 Aktive Au")
 outarraktiveau=np.zeros((nrows, ncols), dtype=int)
 outarraktiveau[:]=NODATA_value
@@ -1668,11 +1517,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==12),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==12),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)ua
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1689,14 +1535,10 @@ outarraktiveau=np.where((maskarr!=1),NODATA_value,outarraktiveau)
 outscorearraktiveau=np.where((maskarr!=1),NODATA_value,outscorearraktiveau)
 outarraktiveau=np.where((sonderwaldarr!=12),NODATA_value,outarraktiveau)
 outscorearraktiveau=np.where((sonderwaldarr!=12),NODATA_value,outscorearraktiveau)
-#convertarrtotif((outscorearraktiveau*100).astype(int), outdir + "/" + "outscorearraktiveau.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarraktiveau, outdir + "/" + "outarraktiveau.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarraktiveau,outdir+"/outarraktiveau.sav")
-#joblib.dump(outscorearraktiveau,outdir+"/outscorearraktiveau.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
-#Sonderwald 1 Bachschutt
+#Sonderwald 1: Bachschutt
 print("1 Bachschutt")
 outarrbachschutt=np.zeros((nrows, ncols), dtype=int)
 outarrbachschutt[:]=NODATA_value
@@ -1713,11 +1555,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==1),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==1),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1734,14 +1573,10 @@ outarrbachschutt=np.where((maskarr!=1),NODATA_value,outarrbachschutt)
 outscorearrbachschutt=np.where((maskarr!=1),NODATA_value,outscorearrbachschutt)
 outarrbachschutt=np.where((sonderwaldarr!=1),NODATA_value,outarrbachschutt)
 outscorearrbachschutt=np.where((sonderwaldarr!=1),NODATA_value,outscorearrbachschutt)
-#convertarrtotif((outscorearrbachschutt*100).astype(int), outdir + "/" + "outscorearrbachschutt.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrbachschutt, outdir + "/" + "outarrbachschutt.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrbachschutt,outdir+"/outarrbachschutt.sav")
-#joblib.dump(outscorearrbachschutt,outdir+"/outscorearrbachschutt.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
-#Sonderwald 13 Talschuttkegel
+#Sonderwald 13: Talschuttkegel
 print("13 Talschuttkegel")
 outarrtalschuttkegel=np.zeros((nrows, ncols), dtype=int)
 outarrtalschuttkegel[:]=NODATA_value
@@ -1758,11 +1593,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==13),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==13),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1779,14 +1611,10 @@ outarrtalschuttkegel=np.where((maskarr!=1),NODATA_value,outarrtalschuttkegel)
 outscorearrtalschuttkegel=np.where((maskarr!=1),NODATA_value,outscorearrtalschuttkegel)
 outarrtalschuttkegel=np.where((sonderwaldarr!=13),NODATA_value,outarrtalschuttkegel)
 outscorearrtalschuttkegel=np.where((sonderwaldarr!=13),NODATA_value,outscorearrtalschuttkegel)
-#convertarrtotif((outscorearrtalschuttkegel*100).astype(int), outdir + "/" + "outscorearrtalschuttkegel.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrtalschuttkegel, outdir + "/" + "outarrtalschuttkegel.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrtalschuttkegel,outdir+"/outarrtalschuttkegel.sav")
-#joblib.dump(outscorearrtalschuttkegel,outdir+"/outscorearrtalschuttkegel.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
-#Sonderwald 14
+#Sonderwald 14: Juraflächen mit 49a
 print("14")
 outarr14=np.zeros((nrows, ncols), dtype=int)
 outarr14[:]=NODATA_value
@@ -1803,11 +1631,8 @@ len(parameterdfsonderwald)
 gewichtungsumsonderwald=gewichtunglage+gewichtungexposition+gewichtungfeuchte+gewichtungneigung+gewichtunggruendigkeit+gewichtungph+gewichtungtg
 for index, row in parameterdfsonderwald.iterrows():
     #print(row["joinid"])
-    scoresonderwaldarr=np.where((sonderwaldarr==14),1.0,0.0)#scoresonderwaldbe(row["Sonderwald"].replace("0","").replace(" ",""))
+    scoresonderwaldarr=np.where((sonderwaldarr==14),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1824,19 +1649,15 @@ outarr14=np.where((maskarr!=1),NODATA_value,outarr14)
 outscorearr14=np.where((maskarr!=1),NODATA_value,outscorearr14)
 outarr14=np.where((sonderwaldarr!=14),NODATA_value,outarr14)
 outscorearr14=np.where((sonderwaldarr!=14),NODATA_value,outscorearr14)
-#convertarrtotif((outscorearr14*100).astype(int), outdir + "/" + "outscorearr14.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarr14, outdir + "/" + "outarr14.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarr14,outdir+"/outarr14.sav")
-#joblib.dump(outscorearr14,outdir+"/outscorearr14.sav")
 del sonderwaldtotalscorearr
 del scoresonderwaldarr
 
 
-
-
-# ***********
+# ****************************************************
 #iteration through parameter table Gebueschwald
+# ****************************************************
 print("Gebueschwald")
+#Legföhren
 outarrgebuesch=np.zeros((nrows, ncols), dtype=int)
 outarrgebuesch[:]=NODATA_value
 outscorearrgebuesch=np.zeros((nrows, ncols), dtype=float)
@@ -1859,7 +1680,6 @@ for index, row in parameterdfgebueschwald.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     scoregebueschwald=np.where((gebueschwaldarr==2),1.0,0.0)
     gebueschwaldtotalscorearr=scoreregionhoehenstufearr*scoregebueschwald*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungsumgebueschwald
     outarrgebuesch=np.where(((gebueschwaldtotalscorearr>thresholdforminimumtotalscore)&(gebueschwaldarr==2)&(gebueschwaldtotalscorearr>outscorearrgebuesch)),int(row["joinid"]),outarrgebuesch)
@@ -1882,18 +1702,14 @@ for index, row in parameterdfmoorgebueschwald.iterrows():
     scorefeuchtearr = scorefeuchtebe(row["Feuchte neu"], row["Feuchte scharf"])
     scorepharr = scorephbe(row["pH"], row["pH scharf"])
     scoretgarr = scoretgbe(row)
-    #scoresonderwaldarr = scoresonderwaldbe(row["Sonderwald"])
     scoremoorgebueschwald=np.where(((gebueschwaldarr==2)&(sonderwaldarr==8)),1.0,0.0)
     moorgebueschwaldtotalscorearr=scoreregionhoehenstufearr*scoremoorgebueschwald*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungsummoorgebueschwald
     outarrmoorgebuesch=np.where(((moorgebueschwaldtotalscorearr>thresholdforminimumtotalscore)&(gebueschwaldarr==2)&(moorgebueschwaldtotalscorearr>outscorearrgebuesch)),int(row["joinid"]),outarrmoorgebuesch)
     outscorearrmoorgebuesch=np.where(((moorgebueschwaldtotalscorearr>thresholdforminimumtotalscore)&(gebueschwaldarr==2)&(moorgebueschwaldtotalscorearr>outscorearrmoorgebuesch)),moorgebueschwaldtotalscorearr,outscorearrmoorgebuesch)
 
-#AV
+#Arven
 print("AV")
 parameterdfav=parameterdf[parameterdf["Gebüschwald"]=="AV"]
-#idvonav=int(parameterdf[parameterdf["BE"]=="AV"]["joinid"].tolist()[0])
-#outarr=np.where((gebueschwaldarr==1),idvonav,outarr)
-#outscorearr=np.where((gebueschwaldarr==1),1.0,outscorearr)
 for index, row in parameterdfav.iterrows():
     #print(row["joinid"])
     scoreregionhoehenstufearr=scoreregionhoehenstufeamxy(row)
@@ -1909,17 +1725,12 @@ for index, row in parameterdfav.iterrows():
     gebueschwaldtotalscorearr=scoreregionhoehenstufearr*scoregebueschwald*(gewichtunglage*scorelagearr+gewichtunggruendigkeit*scoregruendigkeitarr+gewichtungneigung*scoreneigungarr+gewichtungexposition*scoreexpositionarr+gewichtungfeuchte*scorefeuchtearr+gewichtungph*scorepharr+gewichtungtg*scoretgarr)/gewichtungsumgebueschwald
     outarrgebuesch=np.where(((gebueschwaldtotalscorearr>0)&(gebueschwaldarr==1)&(gebueschwaldtotalscorearr>outscorearrgebuesch)),int(row["joinid"]),outarrgebuesch)
     outscorearrgebuesch=np.where(((gebueschwaldtotalscorearr>0)&(gebueschwaldarr==1)&(gebueschwaldtotalscorearr>outscorearrgebuesch)),gebueschwaldtotalscorearr,outscorearrgebuesch)
-    #outscorearr = np.where((gebueschwaldtotalscorearr > outscorearr), gebueschwaldtotalscorearr, outscorearrgebuesch)
 outarrgebuesch=np.where((wasserarr==1),NODATA_value,outarrgebuesch)
 outscorearrgebuesch=np.where((wasserarr==1),NODATA_value,outscorearrgebuesch)
 outarrgebuesch=np.where((maskarr!=1),NODATA_value,outarrgebuesch)
 outscorearrgebuesch=np.where((maskarr!=1),NODATA_value,outscorearrgebuesch)
 outarrgebuesch=np.where((gebueschwaldarr>0),outarrgebuesch, NODATA_value)
 outscorearrgebuesch=np.where((gebueschwaldarr>0),outscorearrgebuesch, NODATA_value)
-#convertarrtotif((outscorearrgebuesch*100).astype(int), outdir + "/" + "outscorearrgebuesch.tif", indatatypeint, referenceraster, NODATA_value)
-#convertarrtotif(outarrgebuesch, outdir + "/" + "outarrgebuesch.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarrgebuesch,outdir+"/outarrgebuesch.sav")
-#joblib.dump(outscorearrgebuesch,outdir+"/outscorearrgebuesch.sav")
 del scoreregionhoehenstufearr
 del scorelagearr
 del scoregruendigkeitarr
@@ -1933,8 +1744,9 @@ del scoregebueschwald
 del gebueschwaldtotalscorearr
 
 
-# ***********
+# ****************************************************
 #Kristallin
+# ****************************************************
 print("18 Kristallin")
 outarrkristallin=np.zeros((nrows, ncols), dtype=int)
 outarrkristallin[:]=NODATA_value
@@ -1955,9 +1767,6 @@ for index, row in parameterdfkristallin.iterrows():
     if row["kristallin"]=="x":
         scorekristallinarr=np.where((sonderwaldarr==18),1.0,0.0)
     scoreregionhoehenstufearr = scoreregionhoehenstufeamxy(row)
-    #scorearvearr=scorearven(row)
-    #scorebergfoehrearr = scorebergfoehren(row)
-    #scorewaldfoehrearr = scorewaldfoehren(row)
     scorelagearr = scorelagebe(row["Lage neu"], row["Lage scharf"])
     scoregruendigkeitarr=scoregruendigkeitbe(row["Gruendigkeit"], row["Gruendigkeit scharf"])
     scoreneigungarr=scorehangneigungbe(float(row['Neigung_von']), float(row['Neigung_bis']), row["Neigung unten scharf"],row["Neigung oben scharf"])
@@ -1977,8 +1786,9 @@ outscorearrkristallin=np.where((sonderwaldarr!=18),NODATA_value,outscorearrkrist
 del scorekristallinarr
 del kristallintotalscorearr
 
-
-#Ueberlagerung
+# ****************************************************
+#Überlagerung
+# ****************************************************
 print("Ueberlagerung")
 outarr=np.where(((outscorearrkristallin>thresholdforminimumtotalscore)&(sonderwaldarr==18)),outarrkristallin,outarr)
 outscorearr=np.where(((outscorearrkristallin>thresholdforminimumtotalscore)&(sonderwaldarr==18)),outscorearrkristallin,outscorearr)
@@ -1986,12 +1796,6 @@ outarr=np.where(((outscorearrfels>thresholdforminimumtotalscore)&(sonderwaldarr=
 outscorearr=np.where(((outscorearrfels>thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr<1)),outscorearrfels,outscorearr)
 outarr=np.where(((outscorearrfelskristallin>thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr==1)),outarrfelskristallin,outarr)
 outscorearr=np.where(((outscorearrfelskristallin>thresholdforminimumtotalscore)&(sonderwaldarr==5)&(aarmassivarr==1)),outscorearrfelskristallin,outscorearr)
-#bfarve=np.where((outscorearrarve>outscorearrbf),outarrarve,outarrbf)
-#bfarvescore=np.where((outscorearrarve>outscorearrbf),outscorearrarve,outscorearrbf)
-#outarr=np.where((bfarvescore>thresholdforminimumtotalscore),bfarve,outarr)
-#outscorearr=np.where((bfarvescore>thresholdforminimumtotalscore),bfarvescore,outscorearr)
-#outarr = np.where(((outscorearrflussbuffer > thresholdforminimumtotalscore) & (outscorearrflussbuffer > outscorearr) & (sonderwaldarr == 10)), outarrflussbuffer,outarr)
-#outscorearr = np.where(((outscorearrflussbuffer > thresholdforminimumtotalscore) & (outscorearrflussbuffer > outscorearr) & (sonderwaldarr == 10)),outscorearrflussbuffer, outscorearr)
 outarr = np.where(((outscorearrflussbuffer > thresholdforminimumtotalscore) & (sonderwaldarr == 10)), outarrflussbuffer,outarr)
 outscorearr = np.where(((outscorearrflussbuffer > thresholdforminimumtotalscore) & (sonderwaldarr == 10)),outscorearrflussbuffer, outscorearr)
 outarr = np.where(((outscorearrrissmoraene > outscorearr) & (sonderwaldarr == 11)), outarrrissmoraene,outarr)
@@ -2028,6 +1832,7 @@ outarr=np.where(((outscorearrmoor>thresholdforminimumtotalscore)&(sonderwaldarr=
 outscorearr=np.where(((outscorearrmoor>thresholdforminimumtotalscore)&(sonderwaldarr==8)),outscorearrmoor,outscorearr)
 outarr=np.where(((outscorearrnadelsumpf>thresholdforminimumtotalscore)&(sonderwaldarr==9)),outarrnadelsumpf,outarr)
 outscorearr=np.where(((outscorearrnadelsumpf>thresholdforminimumtotalscore)&(sonderwaldarr==9)),outscorearrnadelsumpf,outscorearr)
+
 #Arven
 outarr=np.where(((outscorearrarve>thresholdforminimumtotalscore)&(arvenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==2)),outarrarve,outarr)
 outscorearr=np.where(((outscorearrarve>thresholdforminimumtotalscore)&(arvenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==2)),outscorearrarve,outscorearr)
@@ -2039,50 +1844,24 @@ outarr=np.where(((outscorearrarve>outscorearr)&(outscorearrarve>thresholdformini
 outscorearr=np.where(((outscorearrarve>outscorearr)&(outscorearrarve>thresholdforminimumtotalscorearvegroesser4ha)&(arvenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==3)),outscorearrarve,outscorearr)
 outarr=np.where(((outscorearrarve>thresholdforminimumtotalscore)&(arvenarr==1)&(regionenarr==1)),outarrarve,outarr)
 outscorearr=np.where(((outscorearrarve>thresholdforminimumtotalscore)&(arvenarr==1)&(regionenarr==1)),outscorearrarve,outscorearr)
+
 #Bergfoehre
-#outarr=np.where(((outscorearrbf>thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==2)),outarrbf,outarr)
-#outscorearr=np.where(((outscorearrbf>thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==2)),outscorearrbf,outscorearr)
-#outarr=np.where(((outscorearrbf>thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==3)),outarrbf,outarr)
-#outscorearr=np.where(((outscorearrbf>thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==3)),outscorearrbf,outscorearr)
 outarr=np.where(((outscorearrbf>outscorearr)&(outscorearrbf>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(regionenarr==2)),outarrbf,outarr)
 outscorearr=np.where(((outscorearrbf>outscorearr)&(outscorearrbf>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(regionenarr==2)),outscorearrbf,outscorearr)
 outarr=np.where(((outscorearrbf>outscorearr)&(outscorearrbf>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(regionenarr==3)),outarrbf,outarr)
 outscorearr=np.where(((outscorearrbf>outscorearr)&(outscorearrbf>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(regionenarr==3)),outscorearrbf,outscorearr)
-#outarr=np.where(((outscorearrbf>outscorearr)&(outscorearrarve>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==2)),outarrbf,outarr)
-#outscorearr=np.where(((outscorearrbf>outscorearr)&(outscorearrarve>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==2)),outscorearrbf,outscorearr)
-#outarr=np.where(((outscorearrbf>outscorearr)&(outscorearrarve>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==3)),outarrbf,outarr)
-#outscorearr=np.where(((outscorearrbf>outscorearr)&(outscorearrarve>thresholdforminimumtotalscorefoehregroesser4ha)&(bergfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==3)),outscorearrbf,outscorearr)
-#outarr=np.where(((outscorearrbf>thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(regionenarr==1)),outarrbf,outarr)
-#outscorearr=np.where(((outscorearrbf>thresholdforminimumtotalscore)&(bergfoehrenarr==1)&(regionenarr==1)),outscorearrbf,outscorearr)
-#Waldfoehre
-#outarr=np.where(((outscorearrwf>thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==2)),outarrwf,outarr)
-#outscorearr=np.where(((outscorearrwf>thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==2)),outscorearrwf,outscorearr)
-#outarr=np.where(((outscorearrwf>thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==3)),outarrwf,outarr)
-#outscorearr=np.where(((outscorearrwf>thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(arvenfoehrenhektararr<=4)&(regionenarr==3)),outscorearrwf,outscorearr)
-#outarr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==2)),outarrwf,outarr)
-#outscorearr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==2)),outscorearrwf,outscorearr)
-#outarr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==3)),outarrwf,outarr)
-#outscorearr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(arvenfoehrenhektararr>4)&(regionenarr==3)),outscorearrwf,outscorearr)
 outarr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(regionenarr==2)),outarrwf,outarr)
 outscorearr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(regionenarr==2)),outscorearrwf,outscorearr)
 outarr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(regionenarr==3)),outarrwf,outarr)
 outscorearr=np.where(((outscorearrwf>outscorearr)&(outscorearrwf>thresholdforminimumtotalscorefoehregroesser4ha)&(waldfoehrenarr==1)&(regionenarr==3)),outscorearrwf,outscorearr)
 outarr=np.where(((outscorearrwf>thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(regionenarr==1)),outarrwf,outarr)
 outscorearr=np.where(((outscorearrwf>thresholdforminimumtotalscore)&(waldfoehrenarr==1)&(regionenarr==1)),outscorearrwf,outscorearr)
+
 #Gebueschwald
 outarr = np.where(((outscorearrgebuesch > thresholdforminimumtotalscore) & (gebueschwaldarr > 0)), outarrgebuesch,outarr)
 outscorearr=np.where(((outscorearrgebuesch>thresholdforminimumtotalscore)&(gebueschwaldarr>0)),outscorearrgebuesch,outscorearr)
 outarr = np.where(((outscorearrmoorgebuesch > thresholdforminimumtotalscore) & (gebueschwaldarr > 0)&(sonderwaldarr==8)), outarrmoorgebuesch,outarr)
 outscorearr=np.where(((outscorearrmoorgebuesch>thresholdforminimumtotalscore)&(gebueschwaldarr>0)&(sonderwaldarr==8)),outscorearrmoorgebuesch,outscorearr)
-
-#loesche alle 59* in OSA ausserhalb der BFOE und Arven Polygonen
-#tempid=parameterdf[parameterdf["BE"]=="59*"]["joinid"]#.tolist()[0]
-#for item in tempid:
-#    #print(item)
-#    outarr = np.where(((outarr==item) & (arvenarr == 1)&(hoehenstufenarr==10)), outarr,0)
-#    outscorearr=np.where(((outarr==item) & (arvenarr == 1)&(hoehenstufenarr==10)),outscorearr,0)
-#    outarr = np.where(((outarr == item) & (bergfoehrenarr == 1)&(hoehenstufenarr==10)), outarr,0)
-#    outscorearr = np.where(((outarr == item) & (bergfoehrenarr == 1)&(hoehenstufenarr==10)), outscorearr,0)
 
 #mask
 outscorearrint=(outscorearr*100).astype(int)
@@ -2097,21 +1876,17 @@ outscorearr=np.where((waldarr==1),outscorearr,NODATA_value)
 outscorearrint=np.where((waldarr==1),outscorearrint,0)
 
 #write output
-#convertarrtotif(outscorearr, outdir + "/" + "outscorearr.tif", indatatype, referenceraster, NODATA_value)
-#convertarrtotif(outarr, outdir + "/" + "outarr.tif", indatatypeint, referenceraster,NODATA_value)
-#joblib.dump(outarr,outdir+"/outarr_final.sav")
-#joblib.dump(outscorearr,outdir+"/outscorearr_final.sav")
-#joblib.dump(outscorearrint,outdir+"/outscorearrint_final.sav")
 convertarrtotif(outarr, outdir+"/"+"bestandortstypen_rcp45.tif", 3, referenceraster, NODATA_value)
-#convertarrtotif(outscorearr, outdir+"/"+"bestandortstypenscore.tif", indatatype, referenceraster, NODATA_value)
 convertarrtotif(outscorearrint, outdir+"/"+"bestandortstypenscoreinteger_rcp45.tif", indatatypeint, referenceraster, NODATA_value)
 #plt.imshow(outarr)
 print("modelling done ...")
 
 
+
+# ****************************************************
 #Arrondierung
+# ****************************************************
 print("Arrondierung ....")
-#outarr=convert_tif_to_array(outdir+"/"+"bestandortstypen.tif")
 arrondiertarr=np.zeros((nrows, ncols), dtype=int)
 arrondierbar_joinidlist=parameterdf[parameterdf["arrondieren"]=="x"]["joinid"].unique().tolist()
 outarrarrondiert=outarr.copy()
@@ -2121,7 +1896,6 @@ while i<nrows-1:
     j=1
     while j<ncols-1:
         joinid=outarr[i,j]
-        #wasser=wasserarr[i,j]
         sw=sonderwaldarr[i,j]
         reg=regionenarr[i,j]
         lage=lagearr[i,j]
