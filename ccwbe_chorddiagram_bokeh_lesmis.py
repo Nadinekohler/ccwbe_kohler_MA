@@ -4,20 +4,10 @@
 
 
 # *************************************************************
-#environment settings
-myworkspace="E:/Masterarbeit/GIS"
-referenceraster=myworkspace+"/bedem10m.tif"
-codespace="E:/Masterarbeit/Parametertabelle"
-#outdir=myworkspace+"/out20220112_mitSturztrajektorien"
-outdir=myworkspace
-#model parameter file
-parameterdf=pd.read_excel(codespace+"/"+"Anhang1_Parameter_Waldstandorte_BE_erweitert_220929.xlsx", dtype="str", engine='openpyxl')
-parameterdf.columns
-
-# *************************************************************
 #importing Pandas library
 import pandas as pd
 import bokeh
+install bokeh
 import bkcharts
 from bkcharts import output_file, Chord
 from bokeh.io import show
