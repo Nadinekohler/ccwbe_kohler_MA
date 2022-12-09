@@ -13,6 +13,7 @@
 import pandas as pd
 import geopandas as gpd
 import shapefile
+import fiona
 
 # *************************************************************
 # Schritt 2: Definition Arbeitsumgebung
@@ -118,7 +119,6 @@ BErcp85_direMittelland.to_file(outdir+"/BErcp85_direMittelland.shp")
 BErcp85_direAlpen.to_file(outdir+"/BErcp85_direAlpen.shp")
 print("exported subset shapefiles BErcp85_dire")
 
-
 print("Einheiten der Durchstichmethode nach Regionen exportieren")
 # BErcp45_tree
 BErcp45_treeJURA=BErcp45_treeJURA[BErcp45_treeJURA["regionid"]==1]
@@ -164,7 +164,7 @@ Einheitenheuteundrcp45treeALPS=gpd.overlay(BEheuteAlpen,BErcp45_treeAlpen,how='u
 Einheitenheuteundrcp85treeALPS=gpd.overlay(BEheuteAlpen,BErcp85_treeAlpen,how='union')
 
 # *************************************************************
-# Schritt 6: Überlagerung der Shapes für die geometrische Analyse
+# Schritt 7: Überlagerung der Shapes für die geometrische Analyse
 
 print("geopandas overlay Einheiten der beiden zukünftigen Methoden")
 Einheitenrcp45JURA=gpd.overlay(BErcp45_direJURA,BErcp45_treeJURA,how='intersection')
@@ -178,30 +178,91 @@ Einheitenrcp85ALPS=gpd.overlay(BErcp85_direAlpen,BErcp85_treeAlpen,how='intersec
 
 
 # *************************************************************
-# Schritt 7: Flächenstatistik nach Regionen
+# Schritt 8: Flächenstatistik nach Regionen --> das brauche ich nur für die Modellierung der Durchstichmethode zu machen, bei den anderen werden diese schon modelliert!
 
-print("area stat Jura heute")
-BEheuteJURA["area"]=""
-BEheuteJURA["area"]=BEheuteJURA["geometry"].area
-areastatBEheuteJura=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'})
-areastatBEheuteJura["hektar"]=areastatBEheuteJura["area"]/10000.0
-areastatBEheuteJura["BEeinheit"] = areastatBEheuteJura.index
+print("area stat Jura Durchstichmethode")
+BErcp45_treeJURA["area"]=""
+BErcp45_treeJURA["area"]=BErcp45_treeJURA["geometry"].area
+areastatrcp45_treeJURA=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'}) #BE heute etc. prüfen...stimmt so noch nicht!
+areastatrcp45_treeJURA["hektar"]=areastatrcp45_treeJURA["area"]/10000.0
+areastatrcp45_treeJURA["BEeinheit"] = areastatrcp45_treeJURA.index
 
-print("area stat Mittelland heute")
-BEheuteMittelland["area"]=""
-BEheuteMittelland["area"]=BEheuteMittelland["geometry"].area
-areastatBEheuteML=BEheuteMittelland.groupby(["BE_heute"]).agg({'area': 'sum'})
-areastatBEheuteML["hektar"]=areastatBEheuteML["area"]/10000.0
-areastatBEheuteML["BEeinheit"] = areastatBEheuteML.index
+BErcp85_treeJURA["area"]=""
+BErcp85_treeJURA["area"]=BErcp45_treeJURA["geometry"].area
+areastatrcp85_treeJURA=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'})
+areastatrcp85_treeJURA["hektar"]=areastatrcp85_treeJURA["area"]/10000.0
+areastatrcp85_treeJURA["BEeinheit"] = areastatrcp85_treeJURA.index
 
-print("area stat Alpen heute")
-BEheuteAlpen["area"]=""
-BEheuteAlpen["area"]=BEheuteAlpen["geometry"].area
-areastatBEheuteALPS=BEheuteAlpen.groupby(["BE_heute"]).agg({'area': 'sum'})
-areastatBEheuteALPS["hektar"]=areastatBEheuteALPS["area"]/10000.0
-areastatBEheuteALPS["BEeinheit"] = areastatBEheuteALPS.index
+print("area stat Mittelland Durchstichmethode")
+BErcp45_treeMittelland["area"]=""
+BErcp45_treeMittelland["area"]=BErcp45_treeJURA["geometry"].area
+areastatrcp45_treeML=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'})
+areastatrcp45_treeML["hektar"]=areastatrcp45_treeML["area"]/10000.0
+areastatrcp45_treeML["BEeinheit"] = areastatrcp45_treeML.index
 
-print("export area stats to excel")
-areastatBEheuteJura.to_excel(outdir+"/areastatBEheuteJURA.xlsx")
-areastatBEheuteML.to_excel(outdir+"/areastatBEheuteML.xlsx")
-areastatBEheuteALPS.to_excel(outdir+"/areastatBEheuteAlps.xlsx")
+print("area stat Mittelland Durchstichmethode")
+BErcp85_treeMittelland["area"]=""
+BErcp85_treeMittelland["area"]=BErcp45_treeJURA["geometry"].area
+areastatrcp85_treeML=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'})
+areastatrcp85_treeML["hektar"]=areastatrcp85_treeML["area"]/10000.0
+areastatrcp85_treeML["BEeinheit"] = areastatrcp85_treeML.index
+
+print("area stat Alpen Durchstichmethode")
+BErcp45_treeAlpen["area"]=""
+BErcp45_treeAlpen["area"]=BErcp45_treeJURA["geometry"].area
+areastatrcp45_treeALPS=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'})
+areastatrcp45_treeALPS["hektar"]=areastatrcp45_treeALPS["area"]/10000.0
+areastatrcp45_treeALPS["BEeinheit"] = areastatrcp45_treeALPS.index
+
+print("area stat Alpen Durchstichmethode")
+BErcp85_treeAlpen["area"]=""
+BErcp85_treeAlpen["area"]=BErcp45_treeJURA["geometry"].area
+areastatrcp85_treeALPS=BEheuteJURA.groupby(["BE_heute"]).agg({'area': 'sum'})
+areastatrcp85_treeALPS["hektar"]=areastatrcp85_treeALPS["area"]/10000.0
+areastatrcp85_treeALPS["BEeinheit"] = areastatrcp85_treeALPS.index
+
+#print("export area stats der Durchstichmethode to excel")
+#areastatrcp45_treeJURA.to_excel(outdir+"/areastatrcp45_treeJURA.xlsx")
+#areastatrcp85_treeJURA.to_excel(outdir+"/areastatrcp85_treeJURA.xlsx")
+#areastatrcp45_treeML.to_excel(outdir+"/areastatrcp45_treeML.xlsx")
+#areastatrcp85_treeML.to_excel(outdir+"/areastatrcp85_treeML.xlsx")
+#areastatrcp45_treeALPS.to_excel(outdir+"/areastatrcp45_treeALPS.xlsx")
+#areastatrcp85_treeALPS.to_excel(outdir+"/areastatrcp85_treeALPS.xlsx")
+
+# *************************************************************
+# Schritt 9: Flächenstatistik pro Einheit und allen Szenarien
+
+areastatheuteJura=pd.read.excel(myworkspace+"/"+"areastatisticsJura.xlsx", dtype="str", engine='openpyxl'))
+areastatrcp45direJura=pd.read.excel(myresults+"/"+"areastatisticsJura_rcp45.xlsx", dtype="str", engine='openpyxl'))
+areastatrcp85direJura=pd.read.excel(myresults+"/"+"areastatisticsJura_rcp85.xlsx", dtype="str", engine='openpyxl'))
+areastatheuteML=pd.read.excel(myworkspace+"/"+"areastatisticsMittelland.xlsx", dtype="str", engine='openpyxl'))
+areastatrcp45direML=pd.read.excel(myresults+"/"+"areastatisticsMittelland_rcp45.xlsx", dtype="str", engine='openpyxl'))
+areastatrcp85direML=pd.read.excel(myresults+"/"+"areastatisticsMittelland_rcp85.xlsx", dtype="str", engine='openpyxl'))
+areastatheuteALPS=pd.read.excel(myworkspace+"/"+"areastatisticsAlpen.xlsx", dtype="str", engine='openpyxl'))
+areastatrcp45direALPS=pd.read.excel(myresults+"/"+"areastatisticsAlpen_rcp45.xlsx", dtype="str", engine='openpyxl'))
+areastatrcp85direALPS=pd.read.excel(myresults+"/"+"areastatisticsAlpen_rcp85.xlsx", dtype="str", engine='openpyxl'))
+
+
+# Jura
+
+joinJuraheute=areastatheuteJura[["BE_heute","area"]].groupby(["BE_heute"]).agg({'area': 'sum'})
+joinJuraheute["BE_heute"]=joinJuraheute.index
+
+joinJurarcp45dire=areastatrcp45direJura[["BE_heute","area"]].groupby(["BE_heute"]).agg({'area': 'sum'})
+joinJurarcp45dire["BE_heute"]=joinJuraheute.index
+
+joinJurarcp85dire=areastatrcp85direJura[["BE_heute","area"]].groupby(["BE_heute"]).agg({'area': 'sum'})
+joinJurarcp45dire["BE_heute"]=joinJuraheute.index
+
+
+areatatJURAmerge=areastatheuteJura.merge(joinJuraheute[["BE_heute", "area"]])
+
+# Mittelland
+# ...
+
+
+# Alpen
+# ...
+
+#areastatisticsJura=areastatisticsJura.merge(joinJura[["BEeinheit","Priorisierung Jura"]], on='BEeinheit',how="left")
+
