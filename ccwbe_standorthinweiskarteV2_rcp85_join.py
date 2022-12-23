@@ -22,9 +22,9 @@ import shapefile
 # *************************************************************
 # Definition Arbeitsumgebung
 print("define workspace")
-myworkspace="E:/Masterarbeit/GIS/Modellergebnisse_221118"
-myresults="E:/Masterarbeit/GIS/Modellergebnisse_221118"
-codespace="E:/Masterarbeit/Parametertabelle"
+myworkspace="E:/Masterarbeit/GIS/Modellergebnisse_221206"
+myresults="E:/Masterarbeit/GIS/Modellergebnisse_221206"
+codespace="E:/Masterarbeit/ccwbe_kohler_MA/ccwbe_kohler_MA"
 outdir=myresults
 
 # *************************************************************
